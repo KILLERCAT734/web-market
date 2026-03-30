@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КиберСайты - Продажа сайтов в стиле киберпанка</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="cyber-background"></div>
+    <div class="scanlines"></div>
+
+    <header class="cyber-header">
+        <div class="header-content">
+            <div class="header-left">
+                <i class="fas fa-globe logo-icon"></i>
+                <h1 class="neon-text">КИБЕРСАЙТЫ</h1>
+            </div>
+
+            <nav class="cyber-main-nav">
+                <div class="nav-container">
+                    <ul class="nav-menu">
+                        <li><a href="#" class="nav-link active" data-page="home"><i class="fas fa-home"></i> ГЛАВНАЯ</a></li>
+                        <li><a href="#" class="nav-link" data-page="catalog"><i class="fas fa-th"></i> КАТАЛОГ</a></li>
+                        <li><a href="#" class="nav-link" data-page="reviews"><i class="fas fa-comments"></i> ОТЗЫВЫ</a></li>
+                        <li><a href="#" class="nav-link" data-page="about"><i class="fas fa-info-circle"></i> О НАС</a></li>
+                        <li><a href="#" class="nav-link" data-page="contact"><i class="fas fa-envelope"></i> КОНТАКТЫ</a></li>
+                        <li><a href="#" class="nav-link" data-page="cart"><i class="fas fa-shopping-cart"></i> КОРЗИНА <span class="cart-count">0</span></a></li>
+                    </ul>
+                </div>
+            </nav>
+
+        </div>
+    </header>
+
+    <main class="cyber-main">
+        <!-- Главная страница -->
+        <section id="home-page" class="page active">
+            <div class="hero-section">
+                <div class="hero-content">
+                    <h2 class="section-title">ДОБРО ПОЖАЛОВАТЬ В БУДУЩЕЕ</h2>
+                    <p class="hero-text">МЫ СОЗДАЕМ САЙТЫ, КОТОРЫЕ ВЫВОДЯТ ВАШ БИЗНЕС В 2077 ГОД</p>
+                    <div class="cta-buttons">
+                        <button class="cyber-btn primary" onclick="scrollToCatalog()"><i class="fas fa-rocket"></i> ПЕРЕЙТИ В КАТАЛОГ</button>
+                        <button class="cyber-btn secondary" onclick="showDemo()"><i class="fas fa-play"></i> ПОСМОТРЕТЬ ДЕМО</button>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="floating-elements">
+                        <div class="floating-item" style="--delay: 0s; --duration: 8s;"><i class="fas fa-code"></i></div>
+                        <div class="floating-item" style="--delay: 1s; --duration: 10s;"><i class="fas fa-laptop-code"></i></div>
+                        <div class="floating-item" style="--delay: 2s; --duration: 7s;"><i class="fas fa-robot"></i></div>
+                        <div class="floating-item" style="--delay: 3s; --duration: 9s;"><i class="fas fa-network-wired"></i></div>
+                        <div class="floating-item" style="--delay: 4s; --duration: 6s;"><i class="fas fa-satellite-dish"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h3 class="section-title">НАШИ ПРЕИМУЩЕСТВА</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                        <h4>МОЛНИЕНОСНАЯ РАЗРАБОТКА</h4>
+                        <p>САЙТ ГОТОВ ЗА 24 ЧАСА БЛАГОДАРЯ НЕЙРОСЕТЯМ</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h4>КВАНТОВАЯ БЕЗОПАСНОСТЬ</h4>
+                        <p>ЗАЩИТА ОТ КИБЕР-АТАК ИЗ БУДУЩЕГО</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                        <h4>ИИ ОПТИМИЗАЦИЯ</h4>
+                        <p>АВТОМАТИЧЕСКАЯ SEO НАСТРОЙКА</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-vr-cardboard"></i></div>
+                        <h4>VR ИНТЕГРАЦИЯ</h4>
+                        <p>ВИРТУАЛЬНАЯ РЕАЛЬНОСТЬ В КАЖДОМ САЙТЕ</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stat-item">
+                    <div class="stat-number" data-target="30">0</div>
+                    <div class="stat-label">ГОТОВЫХ САЙТОВ</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-target="120">0</div>
+                    <div class="stat-label">ДОВОЛЬНЫХ КЛИЕНТОВ</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-target="99">0</div>
+                    <div class="stat-label">УРОВЕНЬ УДОВЛЕТВОРЕНИЯ</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-target="2077">0</div>
+                    <div class="stat-label">ГОД ТЕХНОЛОГИЙ</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Страница каталога -->
+        <section id="catalog-page" class="page">
+            <div class="catalog-header">
+                <h2 class="section-title">НАШ КАТАЛОГ</h2>
+                <p class="catalog-subtitle">ВЫБЕРИТЕ САЙТ СВОЕЙ МЕЧТЫ</p>
+            </div>
+
+            <div class="catalog-controls">
+                <div class="search-filter-group">
+                    <input type="text" id="search" placeholder="ПОИСК ПО НАЗВАНИЮ..." class="cyber-input">
+                    <select id="category" class="cyber-select">
+                        <option value="all">ВСЕ КАТЕГОРИИ</option>
+                        <option value="corporate">КОРПОРАТИВНЫЕ</option>
+                        <option value="portfolio">ПОРТФОЛИО</option>
+                        <option value="ecommerce">МАГАЗИНЫ</option>
+                        <option value="blog">БЛОГИ</option>
+                    </select>
+                </div>
+                <div class="sort-options">
+                    <select id="sort" class="cyber-select">
+                        <option value="default">СОРТИРОВКА</option>
+                        <option value="price-asc">ЦЕНА (ПО ВОЗРАСТАНИЮ)</option>
+                        <option value="price-desc">ЦЕНА (ПО УБЫВАНИЮ)</option>
+                        <option value="name-asc">НАЗВАНИЕ (А-Я)</option>
+                        <option value="name-desc">НАЗВАНИЕ (Я-А)</option>
+                    </select>
+                </div>
+                <div class="items-per-page">
+                    <span>ПОКАЗЫВАТЬ:</span>
+                    <select id="items-per-page" class="cyber-select">
+                        <option value="6" selected>6</option>
+                        <option value="12">12</option>
+                        <option value="18">18</option>
+                        <option value="30">30</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="products-grid" id="products">
+                <!-- Товары будут сгенерированы JavaScript -->
+            </div>
+
+            <div class="pagination-container">
+                <div class="pagination-info" id="pagination-info">СТРАНИЦА 1 ИЗ 1</div>
+                <div class="pagination-controls" id="pagination-controls">
+                    <button class="pagination-btn" id="prev-page" disabled><i class="fas fa-chevron-left"></i></button>
+                    <div class="pagination-pages" id="pagination-pages"></div>
+                    <button class="pagination-btn" id="next-page" disabled><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Страница отзывов -->
+        <section id="reviews-page" class="page">
+            <div class="reviews-header">
+                <h2 class="section-title">ОТЗЫВЫ КЛИЕНТОВ</h2>
+                <p class="reviews-subtitle">ЧТО ГОВОРЯТ О НАС В БУДУЩЕМ</p>
+            </div>
+
+            <div class="reviews-container">
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="review-avatar">А.И.</div>
+                        <div class="review-info">
+                            <h4>АЛЕКСЕЙ ИВАНОВ</h4>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="review-text">КУПИЛ КОРПОРАТИВНЫЙ САЙТ ДЛЯ СВОЕЙ КОМПАНИИ И НЕ ПОЖАЛЕЛ! НЕЙРОСЕТЬ САМА НАСТРОИЛА ВСЕ ПАРАМЕТРЫ, А КЛИЕНТЫ ГОВОРЯТ, ЧТО ДИЗАЙН КАК БУДТО ИЗ 2077 ГОДА!</p>
+                    <div class="review-date">12.04.2077</div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="review-avatar">М.С.</div>
+                        <div class="review-info">
+                            <h4>МАРИНА СМИРНОВА</h4>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="review-text">ЗАКАЗАЛА ПОРТФОЛИО ДЛЯ СВОИХ ДИЗАЙНЕРСКИХ РАБОТ. ОЧЕНЬ ПОНРАВИЛОСЬ, ЧТО МОЖНО УПРАВЛЯТЬ САЙТОМ СИЛОЙ МЫСЛИ ЧЕРЕЗ НЕЙРОИНТЕРФЕЙС! КЛИЕНТЫ В ВОСТОРГЕ!</p>
+                    <div class="review-date">05.03.2077</div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="review-avatar">Д.П.</div>
+                        <div class="review-info">
+                            <h4>ДМИТРИЙ ПЕТРОВ</h4>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="review-text">ОТКРЫЛ ИНТЕРНЕТ-МАГАЗИН С КВАНТОВОЙ ДОСТАВКОЙ! ТОВАРЫ ПРИХОДЯТ К КЛИЕНТАМ МГНОВЕННО ЧЕРЕЗ ТЕЛЕПОРТАЦИЮ. ПРОДАЖИ ВЫРОСЛИ В 1000 РАЗ!</p>
+                    <div class="review-date">18.02.2077</div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="review-avatar">Е.К.</div>
+                        <div class="review-info">
+                            <h4>ЕЛЕНА КУЗНЕЦОВА</h4>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="review-text">БЛОГ О КИБЕР-ТЕХНОЛОГИЯХ С ГОЛОГРАФИЧЕСКИМИ РЕПОРТАЖАМИ - ЭТО ТО, ЧТО МНЕ БЫЛО НУЖНО! ЧИТАТЕЛИ МОГУТ ПОГРУЗИТЬСЯ В МАТЕРИАЛ ЧЕРЕЗ VR-ОЧКИ!</p>
+                    <div class="review-date">30.01.2077</div>
+                </div>
+            </div>
+
+            <div class="add-review-section">
+                <h3>ОСТАВЬТЕ СВОЙ ОТЗЫВ</h3>
+                <form id="review-form">
+                    <div class="form-group">
+                        <input type="text" placeholder="ВАШЕ ИМЯ" class="cyber-input" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea placeholder="ВАШ ОТЗЫВ..." class="cyber-textarea" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="rating-select">
+                            <span>ОЦЕНКА:</span>
+                            <div class="star-rating">
+                                <i class="far fa-star" data-value="1"></i>
+                                <i class="far fa-star" data-value="2"></i>
+                                <i class="far fa-star" data-value="3"></i>
+                                <i class="far fa-star" data-value="4"></i>
+                                <i class="far fa-star" data-value="5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="cyber-btn primary">ОТПРАВИТЬ ОТЗЫВ</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Страница "О нас" -->
+        <section id="about-page" class="page">
+            <div class="about-header">
+                <h2 class="section-title">О КОМПАНИИ</h2>
+                <p class="about-subtitle">МЫ - ЛИДЕРЫ ВЕБ-РАЗРАБОТКИ БУДУЩЕГО</p>
+            </div>
+
+            <div class="about-content">
+                <div class="about-text">
+                    <p>КОМПАНИЯ "КИБЕРСАЙТЫ" ОСНОВАНА В 2075 ГОДУ И ЗАНИМАЕТСЯ СОЗДАНИЕМ ИННОВАЦИОННЫХ ВЕБ-РЕШЕНИЙ ДЛЯ БИЗНЕСА БУДУЩЕГО. НАШИ ТЕХНОЛОГИИ ОСНОВАНЫ НА ИСКУССТВЕННОМ ИНТЕЛЛЕКТЕ, КВАНТОВЫХ ВЫЧИСЛЕНИЯХ И НЕЙРОИНТЕРФЕЙСАХ.</p>
+
+                    <p>МЫ ПЕРВЫЕ В МИРЕ РАЗРАБОТАЛИ ТЕХНОЛОГИЮ МГНОВЕННОЙ ДОСТАВКИ САЙТОВ ЧЕРЕЗ КВАНТОВУЮ СЕТЬ, ЧТО ПОЗВОЛЯЕТ НАШИМ КЛИЕНТАМ ПОЛУЧАТЬ ГОТОВЫЕ РЕШЕНИЯ В ТЕЧЕНИЕ 24 ЧАСОВ.</p>
+
+                    <p>НАША КОМАНДА СОСТОИТ ИЗ ЛУЧШИХ СПЕЦИАЛИСТОВ В ОБЛАСТИ КИБЕР-ТЕХНОЛОГИЙ, НЕЙРОСЕТЕЙ И КВАНТОВОГО ПРОГРАММИРОВАНИЯ.</p>
+                </div>
+
+                <div class="about-visual">
+                    <div class="team-avatars">
+                        <div class="team-member">
+                            <div class="member-avatar"><i class="fas fa-user-astronaut"></i></div>
+                            <div class="member-name">ДЖОН ДОУ</div>
+                            <div class="member-position">ГЛАВНЫЙ КИБЕР-АРХИТЕКТОР</div>
+                        </div>
+                        <div class="team-member">
+                            <div class="member-avatar"><i class="fas fa-user-robot"></i></div>
+                            <div class="member-name">АЛИСА СМИТ</div>
+                            <div class="member-position">НЕЙРО-ДИЗАЙНЕР</div>
+                        </div>
+                        <div class="team-member">
+                            <div class="member-avatar"><i class="fas fa-user-cog"></i></div>
+                            <div class="member-name">БОБ ДжОНСОН</div>
+                            <div class="member-position">КВАНТОВЫЙ ПРОГРАММИСТ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="technologies-section">
+                <h3>ТЕХНОЛОГИИ, КОТОРЫЕ МЫ ИСПОЛЬЗУЕМ</h3>
+                <div class="tech-icons">
+                    <div class="tech-icon"><i class="fas fa-brain"></i><span>НЕЙРОСЕТИ</span></div>
+                    <div class="tech-icon"><i class="fas fa-atom"></i><span>КВАНТОВЫЕ ВЫЧИСЛЕНИЯ</span></div>
+                    <div class="tech-icon"><i class="fas fa-vr-cardboard"></i><span>ВИРТУАЛЬНАЯ РЕАЛЬНОСТЬ</span></div>
+                    <div class="tech-icon"><i class="fas fa-dna"></i><span>ГЕНЕРАТИВНЫЙ ДИЗАЙН</span></div>
+                    <div class="tech-icon"><i class="fas fa-robot"></i><span>ИСКУССТВЕННЫЙ ИНТЕЛЛЕКТ</span></div>
+                    <div class="tech-icon"><i class="fas fa-satellite"></i><span>КОСМИЧЕСКИЙ ХОСТИНГ</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Страница контактов -->
+        <section id="contact-page" class="page">
+            <div class="contact-header">
+                <h2 class="section-title">КОНТАКТЫ</h2>
+                <p class="contact-subtitle">СВЯЖИТЕСЬ С НАМИ ИЗ ЛЮБОЙ ТОЧКИ ВСЕЛЕННОЙ</p>
+            </div>
+
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h3>НАШИ КООРДИНАТЫ</h3>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>НЕБОСКРЕБ "КИБЕР-ТАУЭР", УЛ. БУДУЩЕГО, 2077, НЕО-ТОКИО</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>+7 (2077) 123-45-67</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>INFO@CYBERSITES.2077</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-globe"></i>
+                        <span>WWW.CYBERSITES.2077</span>
+                    </div>
+
+                    <div class="social-links">
+                        <h4>МЫ В СОЦСЕТЯХ:</h4>
+                        <div class="social-icons">
+                            <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-vk"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-odnoklassniki"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-pinterest"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-form">
+                    <h3>НАПИШИТЕ НАМ</h3>
+                    <form id="contact-form">
+                        <div class="form-group">
+                            <input type="text" placeholder="ВАШЕ ИМЯ" class="cyber-input" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="ВАШ E-MAIL" class="cyber-input" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" placeholder="ТЕМА СООБЩЕНИЯ" class="cyber-input" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="ВАШЕ СООБЩЕНИЕ..." class="cyber-textarea" required></textarea>
+                        </div>
+                        <button type="submit" class="cyber-btn primary">ОТПРАВИТЬ СООБЩЕНИЕ</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="map-container">
+                <div class="cyber-map">
+                    <div class="map-marker">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div class="marker-info">НЕО-ТОКИО, КИБЕР-ТАУЭР</div>
+                    </div>
+                    <div class="map-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Страница корзины -->
+        <section id="cart-page" class="page">
+            <div class="cart-header">
+                <h2 class="section-title">ВАША КОРЗИНА</h2>
+                <p class="cart-subtitle">ТОВАРЫ, ВЫБРАННЫЕ ДЛЯ ПОКУПКИ</p>
+            </div>
+
+            <div class="cart-container">
+                <div class="cart-items" id="cart-items">
+                    <!-- Товары в корзине будут добавлены JavaScript -->
+                    <p class="empty-cart-message">ВАША КОРЗИНА ПУСТА. ДОБАВЬТЕ ТОВАРЫ ИЗ КАТАЛОГА.</p>
+                </div>
+
+                <div class="cart-summary">
+                    <h3>ИТОГО ЗАКАЗА</h3>
+                    <div class="cart-total">
+                        <span>ОБЩАЯ СТОИМОСТЬ:</span>
+                        <span class="total-price">0 ₽</span>
+                    </div>
+                    <button class="cyber-btn primary checkout-btn" onclick="checkout()" disabled>ОФОРМИТЬ ЗАКАЗ</button>
+                    <p class="checkout-info">ОФОРМЛЕНИЕ ЗАКАЗА ЧЕРЕЗ КВАНТОВУЮ СЕТЬ ЗАЙМЕТ МЕНЕЕ 1 СЕКУНДЫ</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cyber-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-globe"></i>
+                <span>КИБЕРСАЙТЫ</span>
+            </div>
+            <div class="footer-links">
+                <a href="#" data-page="home">ГЛАВНАЯ</a>
+                <a href="#" data-page="catalog">КАТАЛОГ</a>
+                <a href="#" data-page="reviews">ОТЗЫВЫ</a>
+                <a href="#" data-page="about">О НАС</a>
+                <a href="#" data-page="contact">КОНТАКТЫ</a>
+            </div>
+            <div class="footer-social">
+                <a href="#"><i class="fab fa-telegram"></i></a>
+                <a href="#"><i class="fab fa-vk"></i></a>
+                <a href="#"><i class="fab fa-odnoklassniki"></i></a>
+                <a href="#"><i class="fab fa-pinterest"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2077 КИБЕРСАЙТЫ. ВСЕ ПРАВА ЗАЩИЩЕНЫ В КИБЕРПРОСТРАНСТВЕ</p>
+            <div class="payment-methods">
+                <span>ПРИНИМАЕМ:</span>
+                <i class="fab fa-bitcoin"></i>
+                <i class="fas fa-credit-card"></i>
+                <i class="fas fa-university"></i>
+                <i class="fas fa-microchip"></i>
+            </div>
+        </div>
+    </footer>
+
+    <div class="floating-action-button">
+        <i class="fas fa-rocket"></i>
+        <span>БЫСТРЫЙ ЗАКАЗ</span>
+    </div>
+
+    <button class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+        <span>ВВЕРХ</span>
+    </button>
+
+    <script src="script.js"></script>
+</body>

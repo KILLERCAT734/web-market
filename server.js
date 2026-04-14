@@ -15,9 +15,11 @@ const HOST = '0.0.0.0'; // Обязательно для Render
 
 // ...
 
+const HOST = '0.0.0.0'; // Обязательно для Render!
+
 app.listen(PORT, HOST, () => {
-    console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
-    console.log(`🔐 Админ-панель: http://localhost:${PORT}/admin.html`);
+    console.log(`🚀 Сервер запущен на порту ${PORT}`);
+    console.log(`🔐 Админ-панель доступна по адресу /admin.html`);
 });
 
 // Middleware

@@ -13,25 +13,44 @@
     <div class="scanlines"></div>
 
     <header class="cyber-header">
-        <div class="header-content">
-            <div class="header-left">
-                <i class="fas fa-globe logo-icon"></i>
-                <h1 class="neon-text">КИБЕРСАЙТЫ</h1>
+        <div class="header-container">
+            <div class="header-logo">
+                <div class="logo-icon-wrapper">
+                    <i class="fas fa-globe logo-icon"></i>
+                </div>
+                <div class="logo-text">
+                    <h1 class="neon-text">КИБЕР<span class="logo-highlight">САЙТЫ</span></h1>
+                    <span class="logo-subtitle">WEB 2077</span>
+                </div>
             </div>
 
-            <nav class="cyber-main-nav">
-                <div class="nav-container">
-                    <ul class="nav-menu">
-                        <li><a href="#" class="nav-link active" data-page="home"><i class="fas fa-home"></i> ГЛАВНАЯ</a></li>
-                        <li><a href="#" class="nav-link" data-page="catalog"><i class="fas fa-th"></i> КАТАЛОГ</a></li>
-                        <li><a href="#" class="nav-link" data-page="reviews"><i class="fas fa-comments"></i> ОТЗЫВЫ</a></li>
-                        <li><a href="#" class="nav-link" data-page="about"><i class="fas fa-info-circle"></i> О НАС</a></li>
-                        <li><a href="#" class="nav-link" data-page="contact"><i class="fas fa-envelope"></i> КОНТАКТЫ</a></li>
-                        <li><a href="#" class="nav-link" data-page="cart"><i class="fas fa-shopping-cart"></i> КОРЗИНА <span class="cart-count">0</span></a></li>
-                    </ul>
-                </div>
+            <nav class="header-nav">
+                <ul class="nav-menu">
+                    <li><a href="#" class="nav-link active" data-page="home"><i class="fas fa-home"></i><span>ГЛАВНАЯ</span></a></li>
+                    <li><a href="#" class="nav-link" data-page="catalog"><i class="fas fa-th"></i><span>КАТАЛОГ</span></a></li>
+                    <li><a href="#" class="nav-link" data-page="reviews"><i class="fas fa-comments"></i><span>ОТЗЫВЫ</span></a></li>
+                    <li><a href="#" class="nav-link" data-page="about"><i class="fas fa-info-circle"></i><span>О НАС</span></a></li>
+                    <li><a href="#" class="nav-link" data-page="contact"><i class="fas fa-envelope"></i><span>КОНТАКТЫ</span></a></li>
+                    <li><a href="#" class="nav-link cart-link" data-page="cart"><i class="fas fa-shopping-cart"></i><span>КОРЗИНА</span><span class="cart-count">0</span></a></li>
+                </ul>
             </nav>
 
+            <div id="auth-container" class="header-auth"></div>
+
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="mobile-nav" id="mobileNav">
+            <ul class="mobile-nav-menu">
+                <li><a href="#" class="mobile-nav-link active" data-page="home"><i class="fas fa-home"></i> ГЛАВНАЯ</a></li>
+                <li><a href="#" class="mobile-nav-link" data-page="catalog"><i class="fas fa-th"></i> КАТАЛОГ</a></li>
+                <li><a href="#" class="mobile-nav-link" data-page="reviews"><i class="fas fa-comments"></i> ОТЗЫВЫ</a></li>
+                <li><a href="#" class="mobile-nav-link" data-page="about"><i class="fas fa-info-circle"></i> О НАС</a></li>
+                <li><a href="#" class="mobile-nav-link" data-page="contact"><i class="fas fa-envelope"></i> КОНТАКТЫ</a></li>
+                <li><a href="#" class="mobile-nav-link cart-link" data-page="cart"><i class="fas fa-shopping-cart"></i> КОРЗИНА <span class="cart-count">0</span></a></li>
+            </ul>
         </div>
     </header>
 
@@ -40,8 +59,8 @@
         <section id="home-page" class="page active">
             <div class="hero-section">
                 <div class="hero-content">
-                    <h2 class="section-title">ДОБРО ПОЖАЛОВАТЬ В БУДУЩЕЕ</h2>
-                    <p class="hero-text">МЫ СОЗДАЕМ САЙТЫ, КОТОРЫЕ ВЫВОДЯТ ВАШ БИЗНЕС В 2077 ГОД</p>
+                    <h2 class="section-title" id="heroTitle">ДОБРО ПОЖАЛОВАТЬ В БУДУЩЕЕ</h2>
+                    <p class="hero-text" id="heroSubtitle">МЫ СОЗДАЕМ САЙТЫ, КОТОРЫЕ ВЫВОДЯТ ВАШ БИЗНЕС В 2077 ГОД</p>
                     <div class="cta-buttons">
                         <button class="cyber-btn primary" onclick="scrollToCatalog()"><i class="fas fa-rocket"></i> ПЕРЕЙТИ В КАТАЛОГ</button>
                         <button class="cyber-btn secondary" onclick="showDemo()"><i class="fas fa-play"></i> ПОСМОТРЕТЬ ДЕМО</button>
@@ -86,15 +105,15 @@
 
             <div class="stats-section">
                 <div class="stat-item">
-                    <div class="stat-number" data-target="30">0</div>
+                    <div class="stat-number" data-target="30" id="statProducts">0</div>
                     <div class="stat-label">ГОТОВЫХ САЙТОВ</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number" data-target="120">0</div>
+                    <div class="stat-number" data-target="120" id="statClients">0</div>
                     <div class="stat-label">ДОВОЛЬНЫХ КЛИЕНТОВ</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number" data-target="99">0</div>
+                    <div class="stat-number" data-target="99" id="statSatisfaction">0</div>
                     <div class="stat-label">УРОВЕНЬ УДОВЛЕТВОРЕНИЯ</div>
                 </div>
                 <div class="stat-item">
@@ -142,9 +161,7 @@
                 </div>
             </div>
 
-            <div class="products-grid" id="products">
-                <!-- Товары будут сгенерированы JavaScript -->
-            </div>
+            <div class="products-grid" id="products"></div>
 
             <div class="pagination-container">
                 <div class="pagination-info" id="pagination-info">СТРАНИЦА 1 ИЗ 1</div>
@@ -170,65 +187,46 @@
                         <div class="review-info">
                             <h4>АЛЕКСЕЙ ИВАНОВ</h4>
                             <div class="review-rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                             </div>
                         </div>
                     </div>
                     <p class="review-text">КУПИЛ КОРПОРАТИВНЫЙ САЙТ ДЛЯ СВОЕЙ КОМПАНИИ И НЕ ПОЖАЛЕЛ! НЕЙРОСЕТЬ САМА НАСТРОИЛА ВСЕ ПАРАМЕТРЫ, А КЛИЕНТЫ ГОВОРЯТ, ЧТО ДИЗАЙН КАК БУДТО ИЗ 2077 ГОДА!</p>
                     <div class="review-date">12.04.2077</div>
                 </div>
-
                 <div class="review-card">
                     <div class="review-header">
                         <div class="review-avatar">М.С.</div>
                         <div class="review-info">
                             <h4>МАРИНА СМИРНОВА</h4>
                             <div class="review-rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star-half-alt"></i>
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
                             </div>
                         </div>
                     </div>
                     <p class="review-text">ЗАКАЗАЛА ПОРТФОЛИО ДЛЯ СВОИХ ДИЗАЙНЕРСКИХ РАБОТ. ОЧЕНЬ ПОНРАВИЛОСЬ, ЧТО МОЖНО УПРАВЛЯТЬ САЙТОМ СИЛОЙ МЫСЛИ ЧЕРЕЗ НЕЙРОИНТЕРФЕЙС! КЛИЕНТЫ В ВОСТОРГЕ!</p>
                     <div class="review-date">05.03.2077</div>
                 </div>
-
                 <div class="review-card">
                     <div class="review-header">
                         <div class="review-avatar">Д.П.</div>
                         <div class="review-info">
                             <h4>ДМИТРИЙ ПЕТРОВ</h4>
                             <div class="review-rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                             </div>
                         </div>
                     </div>
                     <p class="review-text">ОТКРЫЛ ИНТЕРНЕТ-МАГАЗИН С КВАНТОВОЙ ДОСТАВКОЙ! ТОВАРЫ ПРИХОДЯТ К КЛИЕНТАМ МГНОВЕННО ЧЕРЕЗ ТЕЛЕПОРТАЦИЮ. ПРОДАЖИ ВЫРОСЛИ В 1000 РАЗ!</p>
                     <div class="review-date">18.02.2077</div>
                 </div>
-
                 <div class="review-card">
                     <div class="review-header">
                         <div class="review-avatar">Е.К.</div>
                         <div class="review-info">
                             <h4>ЕЛЕНА КУЗНЕЦОВА</h4>
                             <div class="review-rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                             </div>
                         </div>
                     </div>
@@ -271,14 +269,11 @@
             </div>
 
             <div class="about-content">
-                <div class="about-text">
+                <div class="about-text" id="aboutText">
                     <p>КОМПАНИЯ "КИБЕРСАЙТЫ" ОСНОВАНА В 2075 ГОДУ И ЗАНИМАЕТСЯ СОЗДАНИЕМ ИННОВАЦИОННЫХ ВЕБ-РЕШЕНИЙ ДЛЯ БИЗНЕСА БУДУЩЕГО. НАШИ ТЕХНОЛОГИИ ОСНОВАНЫ НА ИСКУССТВЕННОМ ИНТЕЛЛЕКТЕ, КВАНТОВЫХ ВЫЧИСЛЕНИЯХ И НЕЙРОИНТЕРФЕЙСАХ.</p>
-
                     <p>МЫ ПЕРВЫЕ В МИРЕ РАЗРАБОТАЛИ ТЕХНОЛОГИЮ МГНОВЕННОЙ ДОСТАВКИ САЙТОВ ЧЕРЕЗ КВАНТОВУЮ СЕТЬ, ЧТО ПОЗВОЛЯЕТ НАШИМ КЛИЕНТАМ ПОЛУЧАТЬ ГОТОВЫЕ РЕШЕНИЯ В ТЕЧЕНИЕ 24 ЧАСОВ.</p>
-
                     <p>НАША КОМАНДА СОСТОИТ ИЗ ЛУЧШИХ СПЕЦИАЛИСТОВ В ОБЛАСТИ КИБЕР-ТЕХНОЛОГИЙ, НЕЙРОСЕТЕЙ И КВАНТОВОГО ПРОГРАММИРОВАНИЯ.</p>
                 </div>
-
                 <div class="about-visual">
                     <div class="team-avatars">
                         <div class="team-member">
@@ -325,28 +320,29 @@
                     <h3>НАШИ КООРДИНАТЫ</h3>
                     <div class="contact-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span>НЕБОСКРЕБ "КИБЕР-ТАУЭР", УЛ. БУДУЩЕГО, 2077, НЕО-ТОКИО</span>
+                        <span id="contactAddress">НЕБОСКРЕБ "КИБЕР-ТАУЭР", УЛ. БУДУЩЕГО, 2077, НЕО-ТОКИО</span>
                     </div>
                     <div class="contact-item">
                         <i class="fas fa-phone"></i>
-                        <span>+7 (2077) 123-45-67</span>
+                        <span id="contactPhone">+7 (2077) 123-45-67</span>
                     </div>
                     <div class="contact-item">
                         <i class="fas fa-envelope"></i>
-                        <span>INFO@CYBERSITES.2077</span>
+                        <span id="contactEmail">INFO@CYBERSITES.2077</span>
                     </div>
                     <div class="contact-item">
                         <i class="fas fa-globe"></i>
-                        <span>WWW.CYBERSITES.2077</span>
+                        <span id="contactWebsite">WWW.CYBERSITES.2077</span>
                     </div>
 
                     <div class="social-links">
                         <h4>МЫ В СОЦСЕТЯХ:</h4>
                         <div class="social-icons">
-                            <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
-                            <a href="#" class="social-icon"><i class="fab fa-vk"></i></a>
-                            <a href="#" class="social-icon"><i class="fab fa-odnoklassniki"></i></a>
-                            <a href="#" class="social-icon"><i class="fab fa-pinterest"></i></a>
+                            <a href="#" class="social-icon" id="socialTelegram"><i class="fab fa-telegram"></i></a>
+                            <a href="#" class="social-icon" id="socialVk"><i class="fab fa-vk"></i></a>
+                            <a href="#" class="social-icon" id="socialWhatsapp"><i class="fab fa-whatsapp"></i></a>
+                            <a href="#" class="social-icon" id="socialOdnoklassniki"><i class="fab fa-odnoklassniki"></i></a>
+                            <a href="#" class="social-icon" id="socialPinterest"><i class="fab fa-pinterest"></i></a>
                         </div>
                     </div>
                 </div>
@@ -391,7 +387,6 @@
 
             <div class="cart-container">
                 <div class="cart-items" id="cart-items">
-                    <!-- Товары в корзине будут добавлены JavaScript -->
                     <p class="empty-cart-message">ВАША КОРЗИНА ПУСТА. ДОБАВЬТЕ ТОВАРЫ ИЗ КАТАЛОГА.</p>
                 </div>
 
@@ -422,10 +417,11 @@
                 <a href="#" data-page="contact">КОНТАКТЫ</a>
             </div>
             <div class="footer-social">
-                <a href="#"><i class="fab fa-telegram"></i></a>
-                <a href="#"><i class="fab fa-vk"></i></a>
-                <a href="#"><i class="fab fa-odnoklassniki"></i></a>
-                <a href="#"><i class="fab fa-pinterest"></i></a>
+                <a href="#" id="footerTelegram"><i class="fab fa-telegram"></i></a>
+                <a href="#" id="footerVk"><i class="fab fa-vk"></i></a>
+                <a href="#" id="footerWhatsapp"><i class="fab fa-whatsapp"></i></a>
+                <a href="#" id="footerOdnoklassniki"><i class="fab fa-odnoklassniki"></i></a>
+                <a href="#" id="footerPinterest"><i class="fab fa-pinterest"></i></a>
             </div>
         </div>
         <div class="footer-bottom">
@@ -450,5 +446,144 @@
         <span>ВВЕРХ</span>
     </button>
 
+    <!-- МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ -->
+    <div id="authModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">ВХОД / РЕГИСТРАЦИЯ</h3>
+                <span class="modal-close" onclick="closeAuthModal()">&times;</span>
+            </div>
+            <div style="display: flex; gap: 0; margin-bottom: 1rem;">
+                <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')" style="flex: 1; padding: 0.8rem;">ВХОД</button>
+                <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')" style="flex: 1; padding: 0.8rem;">РЕГИСТРАЦИЯ</button>
+            </div>
+            
+            <div id="login-form" class="auth-form active">
+                <div class="form-group">
+                    <input type="email" id="loginEmail" class="cyber-input" placeholder="EMAIL" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" class="cyber-input" placeholder="ПАРОЛЬ" required>
+                </div>
+                <button class="cyber-btn primary" onclick="login()">ВОЙТИ</button>
+            </div>
+            
+            <div id="register-form" class="auth-form">
+                <div class="form-group">
+                    <input type="text" id="regUsername" class="cyber-input" placeholder="ИМЯ ПОЛЬЗОВАТЕЛЯ" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="regEmail" class="cyber-input" placeholder="EMAIL" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="regPassword" class="cyber-input" placeholder="ПАРОЛЬ" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="regConfirm" class="cyber-input" placeholder="ПОДТВЕРДИТЕ ПАРОЛЬ" required>
+                </div>
+                <button class="cyber-btn primary" onclick="register()">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ОФОРМЛЕНИЯ ЗАКАЗА -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content checkout-modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-rocket" style="color: var(--neon-pink);"></i> ОФОРМЛЕНИЕ ЗАКАЗА</h3>
+                <span class="modal-close" onclick="closeCheckoutModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <form id="checkoutForm">
+                    <div class="form-section">
+                        <h4 class="form-section-title"><i class="fas fa-user-astronaut"></i> КОНТАКТНЫЕ ДАННЫЕ</h4>
+                        <div class="form-group">
+                            <label>ВАШЕ ИМЯ / НАЗВАНИЕ *</label>
+                            <input type="text" id="checkoutName" class="cyber-input" placeholder="Как к вам обращаться?" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label>СПОСОБ СВЯЗИ *</label>
+                                <select id="checkoutContactMethod" class="cyber-select" required>
+                                    <option value="">-- ВЫБЕРИТЕ --</option>
+                                    <option value="telegram">📱 Telegram</option>
+                                    <option value="whatsapp">💬 WhatsApp</option>
+                                    <option value="vk">👥 ВКонтакте</option>
+                                    <option value="email">📧 Email</option>
+                                    <option value="phone">📞 Телефон</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label>КОНТАКТ *</label>
+                                <input type="text" id="checkoutContact" class="cyber-input" placeholder="@username / +7... / email" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4 class="form-section-title"><i class="fas fa-cogs"></i> ЧТО НУЖНО ДОРАБОТАТЬ?</h4>
+                        <div class="form-group">
+                            <label>ОПИШИТЕ ВАШИ ПОЖЕЛАНИЯ</label>
+                            <textarea id="checkoutRequirements" class="cyber-textarea" rows="3" placeholder="Интеграция с CRM, особый дизайн, дополнительные функции..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4 class="form-section-title"><i class="fas fa-shield-alt"></i> УСЛОВИЯ И ОПЛАТА</h4>
+                        
+                        <div class="info-box">
+                            <p><i class="fas fa-check-circle" style="color: var(--neon-green);"></i> После отправки заявки мы свяжемся с вами для обсуждения деталей.</p>
+                            <p><i class="fas fa-check-circle" style="color: var(--neon-green);"></i> После согласования вносится предоплата 30% от стоимости.</p>
+                            <p><i class="fas fa-check-circle" style="color: var(--neon-green);"></i> Оставшиеся 70% — после завершения проекта.</p>
+                        </div>
+
+                        <div class="price-summary">
+                            <div class="price-row">
+                                <span>СТОИМОСТЬ ЗАКАЗА:</span>
+                                <span class="price-value" id="checkoutFullTotal">0</span>
+                            </div>
+                            <div class="price-divider"></div>
+                            <div class="price-row prepayment">
+                                <span>ПРЕДОПЛАТА 30%:</span>
+                                <span class="price-value" id="checkoutPrepayment">0</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>СПОСОБ ОПЛАТЫ</label>
+                            <select id="checkoutPayment" class="cyber-select">
+                                <option value="card">💳 Банковская карта</option>
+                                <option value="crypto">₿ Криптовалюта</option>
+                                <option value="invoice">📄 Счёт для юр.лиц</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="checkoutAgree" required>
+                            <span>Я согласен с <a href="#">условиями</a> и <a href="#">договором-оферты</a></span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="cyber-btn primary checkout-submit-btn">
+                        <i class="fas fa-paper-plane"></i> ОТПРАВИТЬ ЗАЯВКУ
+                    </button>
+                    
+                    <p class="secure-note"><i class="fas fa-lock"></i> Данные защищены квантовым шифрованием</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ОТЗЫВОВ -->
+    <div id="reviewsModal" class="modal">
+        <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <div id="reviewsContent"></div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
+</html>

@@ -11,6 +11,14 @@ const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Обязательно для Render
+
+// ...
+
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
+    console.log(`🔐 Админ-панель: http://localhost:${PORT}/admin.html`);
+});
 
 // Middleware
 app.use(cors());

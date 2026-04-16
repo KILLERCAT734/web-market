@@ -24,6 +24,41 @@ let authToken = localStorage.getItem('authToken');
 let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
 // ============================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePhone(phone) {
+    return /^[\d\s\+\-\(\)]{10,}$/.test(phone);
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `cyber-notification ${type}`;
+    
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    notification.innerHTML = `
+        <i class="fas ${icons[type] || icons.info}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
+}
+
+// ============================================
 // ФУНКЦИИ API
 // ============================================
 async function loadSiteSettings() {
@@ -32,6 +67,10 @@ async function loadSiteSettings() {
         const response = await fetch(`${API_URL}/settings`);
         if (!response.ok) return;
         const settings = await response.json();
+
+        // Сохраняем настройки глобально
+        window.siteSettings = settings;
+        console.log('🌍 Настройки сайта загружены:', settings);
         
         if (settings.hero_title) {
             const heroTitle = document.getElementById('heroTitle');
@@ -85,7 +124,7 @@ async function loadSiteSettings() {
                 aboutText.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
             }
         }
-        console.log('✅ Настройки сайта загружены');
+        console.log('✅ Настройки сайта применены');
     } catch (error) {
         console.warn('⚠️ Не удалось загрузить настройки сайта');
     }
@@ -220,6 +259,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         setupForms();
         setupBackToTop();
         setupAuthUI();
+        initCyberMap();
         updateCartDisplay();
     }
 
@@ -333,22 +373,28 @@ document.addEventListener('DOMContentLoaded', async function() {
         const selectedCategory = categorySelect.value;
         const sortMethod = sortSelect.value;
         let result = [...products];
+        
         if (selectedCategory !== 'all') {
             result = result.filter(p => p.category === selectedCategory);
         }
+        
         if (searchTerm) {
             result = result.filter(p => 
                 p.title.toLowerCase().includes(searchTerm) || 
                 p.description.toLowerCase().includes(searchTerm)
             );
         }
+        
         switch(sortMethod) {
             case 'price-asc': result.sort((a, b) => a.price - b.price); break;
             case 'price-desc': result.sort((a, b) => b.price - a.price); break;
+            case 'rating-desc': result.sort((a, b) => b.rating - a.rating); break;
+            case 'rating-asc': result.sort((a, b) => a.rating - b.rating); break;
             case 'name-asc': result.sort((a, b) => a.title.localeCompare(b.title)); break;
             case 'name-desc': result.sort((a, b) => b.title.localeCompare(a.title)); break;
             default: result.sort((a, b) => b.sales - a.sales);
         }
+        
         filteredProducts = result;
         currentPage = 1;
         updatePagination();
@@ -482,16 +528,49 @@ document.addEventListener('DOMContentLoaded', async function() {
                     return;
                 }
                 
-                const currentProductId = 1;
-                const success = await submitReview(currentProductId, selectedRating, comment);
-                if (success) {
-                    alert('✅ СПАСИБО ЗА ВАШ ОТЗЫВ!');
-                    this.reset();
-                    selectedRating = 0;
-                    document.querySelectorAll('.star-rating i').forEach(s => { s.classList.remove('active', 'fas'); s.classList.add('far'); });
-                } else {
-                    alert('❌ ОШИБКА ОТПРАВКИ. ПОПРОБУЙТЕ ПОЗЖЕ.');
-                }
+                const productSelect = document.createElement('select');
+                productSelect.className = 'cyber-select';
+                productSelect.style.marginBottom = '1rem';
+                productSelect.innerHTML = '<option value="">ВЫБЕРИТЕ ТОВАР</option>' + 
+                    products.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+                
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.style.cssText = `display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; justify-content:center; align-items:center;`;
+                
+                modal.innerHTML = `
+                    <div style="background:#0a0a1a; border:2px solid #0abdc6; border-radius:15px; padding:2rem; max-width:400px; width:90%;">
+                        <h3 style="color:#0abdc6; margin-bottom:1rem;">ВЫБЕРИТЕ ТОВАР</h3>
+                        <div id="productSelectContainer"></div>
+                        <button class="cyber-btn" id="confirmProductSelect" style="margin-top:1rem;">ОТПРАВИТЬ ОТЗЫВ</button>
+                        <button class="cyber-btn" onclick="this.closest('.modal').remove()" style="margin-top:0.5rem; background:#666;">ОТМЕНА</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                document.getElementById('productSelectContainer').appendChild(productSelect);
+                
+                document.getElementById('confirmProductSelect').addEventListener('click', async () => {
+                    const selectedProductId = parseInt(productSelect.value);
+                    if (!selectedProductId) {
+                        alert('Выберите товар');
+                        return;
+                    }
+                    
+                    modal.remove();
+                    const success = await submitReview(selectedProductId, selectedRating, comment);
+                    if (success) {
+                        showNotification('✅ СПАСИБО ЗА ВАШ ОТЗЫВ!', 'success');
+                        reviewForm.reset();
+                        selectedRating = 0;
+                        document.querySelectorAll('.star-rating i').forEach(s => { 
+                            s.classList.remove('active', 'fas'); 
+                            s.classList.add('far'); 
+                        });
+                    } else {
+                        showNotification('❌ ОШИБКА ОТПРАВКИ', 'error');
+                    }
+                });
             });
         }
 
@@ -505,8 +584,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                     message: this.querySelector('textarea').value
                 };
                 const sent = await sendContactFormToAPI(formData);
-                alert(sent ? '✅ СООБЩЕНИЕ ОТПРАВЛЕНО!' : '❌ ОШИБКА. ПОПРОБУЙТЕ ПОЗЖЕ.');
-                if (sent) this.reset();
+                if (sent) {
+                    showNotification('✅ СООБЩЕНИЕ ОТПРАВЛЕНО!', 'success');
+                    this.reset();
+                } else {
+                    showNotification('❌ ОШИБКА. ПОПРОБУЙТЕ ПОЗЖЕ.', 'error');
+                }
             });
         }
 
@@ -580,13 +663,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         localStorage.setItem('cyberCart', JSON.stringify(cart));
         updateCartDisplay();
-        showNotification(`✅ "${product.title}" добавлен в корзину!`);
+        showNotification(`✅ "${product.title}" добавлен в корзину!`, 'success');
     };
 
     window.removeFromCart = function(productId) {
-        cart = cart.filter(item => item.id !== productId);
-        localStorage.setItem('cyberCart', JSON.stringify(cart));
-        updateCartDisplay();
+        const item = cart.find(i => i.id === productId);
+        if (!item) return;
+        
+        if (confirm(`Удалить "${item.title}" из корзины?`)) {
+            cart = cart.filter(item => item.id !== productId);
+            localStorage.setItem('cyberCart', JSON.stringify(cart));
+            updateCartDisplay();
+            showNotification(`🗑️ "${item.title}" удалён из корзины`, 'warning');
+        }
     };
 
     window.updateQuantity = function(productId, change) {
@@ -646,7 +735,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     window.checkout = function() {
         if (cart.length === 0) {
-            alert('КОРЗИНА ПУСТА!');
+            showNotification('🛒 КОРЗИНА ПУСТА!', 'warning');
             return;
         }
         
@@ -679,25 +768,58 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
 
     async function processCheckout() {
-        const name = document.getElementById('checkoutName')?.value || '';
-        const contactMethod = document.getElementById('checkoutContactMethod')?.value || '';
-        const contact = document.getElementById('checkoutContact')?.value || '';
-        const requirements = document.getElementById('checkoutRequirements')?.value || '';
-        const payment = document.getElementById('checkoutPayment')?.value || 'card';
-        const agree = document.getElementById('checkoutAgree')?.checked || false;
+        const nameInput = document.getElementById('checkoutName');
+        const contactMethodInput = document.getElementById('checkoutContactMethod');
+        const contactInput = document.getElementById('checkoutContact');
+        const agreeInput = document.getElementById('checkoutAgree');
         
-        if (!name || name.trim() === '') { alert('Пожалуйста, укажите ваше имя'); return; }
-        if (!contactMethod || contactMethod === '') { alert('Пожалуйста, выберите способ связи'); return; }
-        if (!contact || contact.trim() === '') { alert('Пожалуйста, укажите контакт для связи'); return; }
-        if (!agree) { alert('Необходимо согласиться с условиями обработки данных'); return; }
+        const name = nameInput?.value?.trim() || '';
+        const contactMethod = contactMethodInput?.value || '';
+        const contact = contactInput?.value?.trim() || '';
+        const requirements = document.getElementById('checkoutRequirements')?.value?.trim() || '';
+        const payment = document.getElementById('checkoutPayment')?.value || 'card';
+        const agree = agreeInput?.checked || false;
+        
+        if (!name) {
+            showNotification('❌ Укажите ваше имя', 'error');
+            nameInput?.focus();
+            return;
+        }
+        
+        if (!contactMethod) {
+            showNotification('❌ Выберите способ связи', 'error');
+            contactMethodInput?.focus();
+            return;
+        }
+        
+        if (!contact) {
+            showNotification('❌ Укажите контакт для связи', 'error');
+            contactInput?.focus();
+            return;
+        }
+        
+        if (contactMethod === 'email' && !validateEmail(contact)) {
+            showNotification('❌ Укажите корректный email', 'error');
+            contactInput?.focus();
+            return;
+        }
+        
+        if (contactMethod === 'phone' && !validatePhone(contact)) {
+            showNotification('❌ Укажите корректный номер телефона', 'error');
+            contactInput?.focus();
+            return;
+        }
+        
+        if (!agree) {
+            showNotification('❌ Необходимо согласиться с условиями', 'error');
+            return;
+        }
         
         const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-        const prepayment = Math.round(total * 0.3);
         
         const orderData = {
             items: cart.map(i => ({ id: i.id, quantity: i.quantity, price: i.price })),
             totalAmount: total,
-            prepaymentAmount: prepayment,
             customer_name: name,
             customer_contact_method: contactMethod,
             customer_contact: contact,
@@ -706,32 +828,32 @@ document.addEventListener('DOMContentLoaded', async function() {
             comment: `Способ связи: ${contactMethod} (${contact})`
         };
         
-        const success = await createOrderOnAPI(orderData);
+        const submitBtn = document.querySelector('.checkout-submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ОТПРАВКА...';
+        submitBtn.disabled = true;
         
-        const modal = document.getElementById('checkoutModal');
-        if (modal) modal.classList.remove('active');
-        
-        if (success) {
-            alert(`✅ ЗАЯВКА ПРИНЯТА!\n\nМы свяжемся с вами для обсуждения деталей.`);
-            cart = [];
-            localStorage.removeItem('cyberCart');
-            updateCartDisplay();
-            showPage('home');
-        } else {
-            alert('❌ ОШИБКА ОТПРАВКИ. Попробуйте позже.');
+        try {
+            const success = await createOrderOnAPI(orderData);
+            
+            const modal = document.getElementById('checkoutModal');
+            if (modal) modal.classList.remove('active');
+            
+            if (success) {
+                showNotification('✅ ЗАЯВКА ПРИНЯТА! Мы свяжемся с вами в ближайшее время.', 'success');
+                cart = [];
+                localStorage.removeItem('cyberCart');
+                updateCartDisplay();
+                showPage('home');
+            } else {
+                showNotification('❌ ОШИБКА ОТПРАВКИ. Попробуйте позже.', 'error');
+            }
+        } catch (error) {
+            showNotification('❌ ОШИБКА ОТПРАВКИ. Проверьте соединение с сервером.', 'error');
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         }
-    }
-
-    function showNotification(message) {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed; top: 100px; right: 20px; background: var(--card-bg);
-            border: 2px solid var(--neon-green); border-radius: 10px; padding: 1rem 2rem;
-            color: white; z-index: 9999; animation: slideIn 0.3s ease;
-        `;
-        notification.innerHTML = `<i class="fas fa-check-circle" style="color: var(--neon-green);"></i> ${message}`;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
     }
 
     // ============================================
@@ -772,12 +894,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 closeAuthModal();
                 setupAuthUI();
-                showNotification(`✅ Добро пожаловать, ${currentUser.username}!`);
+                showNotification(`✅ Добро пожаловать, ${currentUser.username}!`, 'success');
             } else {
-                alert(data.error || 'Ошибка входа');
+                showNotification(data.error || 'Ошибка входа', 'error');
             }
         } catch (error) {
-            alert('Ошибка соединения');
+            showNotification('Ошибка соединения', 'error');
         }
     };
 
@@ -787,7 +909,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         const password = document.getElementById('regPassword').value;
         const confirm = document.getElementById('regConfirm').value;
         
-        if (password !== confirm) { alert('Пароли не совпадают'); return; }
+        if (password !== confirm) {
+            showNotification('Пароли не совпадают', 'error');
+            return;
+        }
         
         try {
             const response = await fetch(`${API_URL}/auth/register`, {
@@ -804,12 +929,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 closeAuthModal();
                 setupAuthUI();
-                showNotification(`✅ Регистрация успешна!`);
+                showNotification(`✅ Регистрация успешна!`, 'success');
             } else {
-                alert(data.error || 'Ошибка регистрации');
+                showNotification(data.error || 'Ошибка регистрации', 'error');
             }
         } catch (error) {
-            alert('Ошибка соединения');
+            showNotification('Ошибка соединения', 'error');
         }
     };
 
@@ -819,7 +944,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         localStorage.removeItem('authToken');
         localStorage.removeItem('currentUser');
         setupAuthUI();
-        showNotification('👋 Вы вышли из системы');
+        showNotification('👋 Вы вышли из системы', 'info');
         const dropdown = document.getElementById('userDropdown');
         if (dropdown) dropdown.classList.remove('active');
     };
@@ -838,14 +963,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
 
     // ============================================
-    // ЗАКАЗЫ ПОЛЬЗОВАТЕЛЯ (РАБОЧАЯ ВЕРСИЯ)
+    // ЗАКАЗЫ ПОЛЬЗОВАТЕЛЯ
     // ============================================
     window.showUserOrders = async function() {
         const dropdown = document.getElementById('userDropdown');
         if (dropdown) dropdown.classList.remove('active');
         
         if (!authToken) {
-            alert('Необходимо войти в систему');
+            showNotification('Необходимо войти в систему', 'warning');
             window.showAuthModal();
             return;
         }
@@ -859,7 +984,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             const orders = await response.json();
             
-            // Создаем модальное окно
             const modal = document.createElement('div');
             modal.className = 'modal active';
             modal.id = 'ordersModal';
@@ -879,49 +1003,25 @@ document.addEventListener('DOMContentLoaded', async function() {
                     </div>
                 `;
             } else {
-                orders.forEach(order => {
-                    const statusNames = { pending: 'ОЖИДАЕТ', processing: 'В РАБОТЕ', shipped: 'ОТПРАВЛЕН', delivered: 'ДОСТАВЛЕН', cancelled: 'ОТМЕНЕН' };
-                    const statusColors = { pending: '#f5e62b', processing: '#0abdc6', shipped: '#8a2be2', delivered: '#23d9a5', cancelled: '#ff3838' };
-                    const date = new Date(order.created_at).toLocaleString('ru');
-                    
-                    let itemsHtml = '';
-                    let totalItems = 0;
-                    if (order.items && order.items.length > 0) {
-                        order.items.forEach(item => {
-                            const price = parseFloat(item.price) || 0;
-                            totalItems += price * item.quantity;
-                            itemsHtml += `
-                                <div style="display:flex; justify-content:space-between; padding:0.5rem; border-bottom:1px solid rgba(255,255,255,0.1);">
-                                    <span style="color:#ccc;">${item.title || 'Товар'} × ${item.quantity}</span>
-                                    <span style="color:#23d9a5;">${(price * item.quantity).toLocaleString()} ₽</span>
-                                </div>
-                            `;
-                        });
-                    }
-                    
-                    contentHtml += `
-                        <div style="background:rgba(10,10,26,0.7); border:1px solid #8a2be2; border-radius:10px; padding:1.5rem; margin-bottom:1rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                                <div>
-                                    <span style="font-family:'Orbitron'; font-size:1.2rem; color:#0abdc6;">ЗАКАЗ #${order.id}</span>
-                                    <div style="color:#888; font-size:0.8rem;">${date}</div>
-                                </div>
-                                <span style="padding:0.4rem 1rem; border-radius:20px; background:${statusColors[order.status]}20; color:${statusColors[order.status]}; border:1px solid ${statusColors[order.status]};">
-                                    ${statusNames[order.status] || order.status}
-                                </span>
-                            </div>
-                            <div style="margin-bottom:1rem;">${itemsHtml}</div>
-                            <div style="display:flex; justify-content:space-between; padding-top:1rem; border-top:1px solid rgba(10,200,255,0.2);">
-                                <span style="color:#888;">${order.customer_name || ''}</span>
-                                <div><span style="color:#ccc;">ИТОГО: </span><span style="color:#ff2ced; font-weight:bold;">${parseFloat(order.total_amount).toLocaleString()} ₽</span></div>
-                            </div>
-                        </div>
-                    `;
-                });
+                contentHtml = `
+                    <div style="margin-bottom:1.5rem; display:flex; gap:1rem; flex-wrap:wrap;">
+                        <input type="text" id="orderSearch" placeholder="🔍 ПОИСК ПО ID..." 
+                               style="flex:1; padding:0.8rem; background:rgba(10,10,26,0.8); border:2px solid #0abdc6; border-radius:5px; color:white;">
+                        <select id="statusFilter" style="flex:1; padding:0.8rem; background:rgba(10,10,26,0.8); border:2px solid #8a2be2; border-radius:5px; color:white;">
+                            <option value="all">ВСЕ СТАТУСЫ</option>
+                            <option value="pending">⏳ ОЖИДАЕТ</option>
+                            <option value="processing">⚙️ В РАБОТЕ</option>
+                            <option value="shipped">🚚 ОТПРАВЛЕН</option>
+                            <option value="delivered">✅ ДОСТАВЛЕН</option>
+                            <option value="cancelled">❌ ОТМЕНЕН</option>
+                        </select>
+                    </div>
+                    <div id="ordersList"></div>
+                `;
             }
             
             modal.innerHTML = `
-                <div style="background:#0a0a1a; border:2px solid #0abdc6; border-radius:15px; padding:2rem; max-width:800px; width:90%; max-height:80vh; overflow-y:auto;">
+                <div style="background:#0a0a1a; border:2px solid #0abdc6; border-radius:15px; padding:2rem; max-width:900px; width:90%; max-height:85vh; overflow-y:auto;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                         <h3 style="color:#0abdc6;"><i class="fas fa-shopping-bag" style="color:#23d9a5; margin-right:0.5rem;"></i>МОИ ЗАКАЗЫ</h3>
                         <span onclick="window.closeOrdersModal()" style="font-size:2rem; cursor:pointer; color:#ff2ced;">&times;</span>
@@ -932,14 +1032,102 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             document.body.appendChild(modal);
             
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) window.closeOrdersModal();
-            });
+            if (orders.length > 0) {
+                const renderOrders = (filterStatus = 'all', searchTerm = '') => {
+                    const ordersList = document.getElementById('ordersList');
+                    let filteredOrders = orders;
+                    
+                    if (filterStatus !== 'all') {
+                        filteredOrders = filteredOrders.filter(o => o.status === filterStatus);
+                    }
+                    
+                    if (searchTerm) {
+                        filteredOrders = filteredOrders.filter(o => o.id.toString().includes(searchTerm));
+                    }
+                    
+                    if (filteredOrders.length === 0) {
+                        ordersList.innerHTML = '<p style="text-align:center; color:#888; padding:2rem;">🔍 ЗАКАЗЫ НЕ НАЙДЕНЫ</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    filteredOrders.forEach(order => {
+                        const statusNames = { 
+                            pending: 'ОЖИДАЕТ', processing: 'В РАБОТЕ', shipped: 'ОТПРАВЛЕН', 
+                            delivered: 'ДОСТАВЛЕН', cancelled: 'ОТМЕНЕН' 
+                        };
+                        const statusColors = { 
+                            pending: '#f5e62b', processing: '#0abdc6', shipped: '#8a2be2', 
+                            delivered: '#23d9a5', cancelled: '#ff3838' 
+                        };
+                        const statusIcons = { pending: '⏳', processing: '⚙️', shipped: '🚚', delivered: '✅', cancelled: '❌' };
+                        
+                        let itemsHtml = '';
+                        if (order.items && order.items.length > 0) {
+                            order.items.forEach(item => {
+                                const price = parseFloat(item.price) || 0;
+                                itemsHtml += `
+                                    <div style="display:flex; justify-content:space-between; padding:0.5rem; border-bottom:1px solid rgba(255,255,255,0.1);">
+                                        <span style="color:#ccc;">${item.title || 'Товар'} × ${item.quantity}</span>
+                                        <span style="color:#23d9a5;">${(price * item.quantity).toLocaleString()} ₽</span>
+                                    </div>
+                                `;
+                            });
+                        }
+                        
+                        html += `
+                            <div style="background:rgba(10,10,26,0.7); border:1px solid ${statusColors[order.status]}; border-radius:10px; padding:1.5rem; margin-bottom:1rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                    <div>
+                                        <span style="font-family:'Orbitron'; font-size:1.2rem; color:#0abdc6;">ЗАКАЗ #${order.id}</span>
+                                        <div style="color:#888; font-size:0.8rem;">${new Date(order.created_at).toLocaleString('ru')}</div>
+                                    </div>
+                                    <span style="padding:0.4rem 1rem; border-radius:20px; background:${statusColors[order.status]}20; color:${statusColors[order.status]}; border:1px solid ${statusColors[order.status]};">
+                                        ${statusIcons[order.status]} ${statusNames[order.status]}
+                                    </span>
+                                </div>
+                                <div style="margin-bottom:1rem;">${itemsHtml}</div>
+                                <div style="display:flex; justify-content:space-between; padding-top:1rem; border-top:1px solid rgba(10,200,255,0.2);">
+                                    <span style="color:#888;">${order.customer_name || 'Клиент'}</span>
+                                    <span style="color:#ff2ced; font-weight:bold; font-size:1.2rem;">${parseFloat(order.total_amount).toLocaleString()} ₽</span>
+                                </div>
+                                <div style="margin-top:1rem; text-align:center;">
+                                    <button onclick="window.copyOrderId(${order.id})" style="background:rgba(10,200,255,0.1); border:1px solid #0abdc6; border-radius:5px; padding:0.5rem 1rem; color:#0abdc6; cursor:pointer;">
+                                        <i class="far fa-copy"></i> СКОПИРОВАТЬ ID: ${order.id}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    ordersList.innerHTML = html;
+                };
+                
+                renderOrders();
+                
+                document.getElementById('orderSearch')?.addEventListener('input', (e) => {
+                    renderOrders(document.getElementById('statusFilter').value, e.target.value);
+                });
+                
+                document.getElementById('statusFilter')?.addEventListener('change', (e) => {
+                    renderOrders(e.target.value, document.getElementById('orderSearch')?.value || '');
+                });
+            }
+            
+            modal.addEventListener('click', (e) => { if (e.target === modal) window.closeOrdersModal(); });
             
         } catch (error) {
             console.error('Ошибка:', error);
-            alert('❌ Не удалось загрузить заказы');
+            showNotification('❌ Не удалось загрузить заказы', 'error');
         }
+    };
+
+    window.copyOrderId = function(orderId) {
+        navigator.clipboard?.writeText(orderId.toString()).then(() => {
+            showNotification(`✅ ID заказа #${orderId} скопирован!`, 'success');
+        }).catch(() => {
+            prompt('ID заказа:', orderId);
+        });
     };
 
     window.closeOrdersModal = function() {
@@ -954,32 +1142,188 @@ document.addEventListener('DOMContentLoaded', async function() {
         const reviews = await loadReviewsForProduct(productId);
         const product = products.find(p => p.id === productId);
         
-        let html = `<h3 style="color: #0abdc6; margin-bottom: 1rem;">ОТЗЫВЫ: ${product?.title}</h3>`;
+        let html = `
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="color: #0abdc6; margin-bottom: 0.5rem;">
+                    <i class="fas fa-star" style="color: #f5e62b;"></i> ОТЗЫВЫ: ${product?.title || 'ТОВАР'}
+                </h3>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #888;">Средняя оценка:</span>
+                    <span style="color: #f5e62b; font-size: 1.2rem;">${'★'.repeat(Math.round(product?.rating || 0))}${'☆'.repeat(5 - Math.round(product?.rating || 0))}</span>
+                    <span style="color: #23d9a5;">${product?.rating?.toFixed(1) || '0.0'}</span>
+                </div>
+            </div>
+        `;
         
         if (reviews.length === 0) {
-            html += '<p style="color: #888;">Пока нет отзывов. Будьте первым!</p>';
+            html += '<p style="color: #888; padding: 1rem; text-align: center;">📝 Пока нет отзывов. Будьте первым!</p>';
         } else {
             reviews.forEach(r => {
                 const stars = '★'.repeat(Math.floor(r.rating)) + '☆'.repeat(5 - Math.floor(r.rating));
                 html += `
                     <div style="background: rgba(10,10,26,0.5); border: 1px solid #8a2be2; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #0abdc6; font-weight: bold;">${r.username || 'Гость'}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #0abdc6; font-weight: bold;">
+                                <i class="fas fa-user-circle"></i> ${r.username || 'Гость'}
+                            </span>
                             <span style="color: #f5e62b;">${stars} (${r.rating})</span>
                         </div>
-                        <p style="color: #ccc;">${r.comment}</p>
+                        <p style="color: #ccc; margin-top: 0.5rem;">${r.comment}</p>
+                        <div style="color: #666; font-size: 0.8rem; margin-top: 0.5rem; text-align: right;">
+                            ${new Date(r.created_at).toLocaleString('ru')}
+                        </div>
                     </div>
                 `;
             });
         }
         
-        html += `<button class="cyber-btn" onclick="window.closeReviewsModal()" style="margin-top: 1rem;">ЗАКРЫТЬ</button>`;
+        if (authToken) {
+            html += `
+                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #0abdc6;">
+                    <h4 style="color: #23d9a5; margin-bottom: 1rem;">
+                        <i class="fas fa-pen"></i> ОСТАВИТЬ ОТЗЫВ
+                    </h4>
+                    <div class="rating-select" style="margin-bottom: 1rem;">
+                        <span style="color: #ccc;">ОЦЕНКА:</span>
+                        <div class="star-rating" id="reviewStars">
+                            <i class="far fa-star" data-value="1"></i>
+                            <i class="far fa-star" data-value="2"></i>
+                            <i class="far fa-star" data-value="3"></i>
+                            <i class="far fa-star" data-value="4"></i>
+                            <i class="far fa-star" data-value="5"></i>
+                        </div>
+                    </div>
+                    <textarea id="reviewComment" class="cyber-textarea" placeholder="ВАШ ОТЗЫВ..." rows="3" style="margin-bottom: 1rem;"></textarea>
+                    <button class="cyber-btn" onclick="window.submitProductReview(${productId})" style="width: auto; padding: 0.8rem 2rem;">
+                        <i class="fas fa-paper-plane"></i> ОТПРАВИТЬ ОТЗЫВ
+                    </button>
+                </div>
+            `;
+        } else {
+            html += `
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(10,10,26,0.5); border-radius: 8px; text-align: center;">
+                    <p style="color: #888; margin-bottom: 1rem;">
+                        <i class="fas fa-lock"></i> Для отправки отзыва необходимо войти в систему
+                    </p>
+                    <button class="cyber-btn" onclick="window.closeReviewsModal(); window.showAuthModal();" style="width: auto; padding: 0.8rem 2rem;">
+                        <i class="fas fa-sign-in-alt"></i> ВОЙТИ
+                    </button>
+                </div>
+            `;
+        }
+        
+        html += `<button class="cyber-btn" onclick="window.closeReviewsModal()" style="margin-top: 1.5rem;">ЗАКРЫТЬ</button>`;
         
         const modal = document.getElementById('reviewsModal');
         const content = document.getElementById('reviewsContent');
         if (modal && content) {
             content.innerHTML = html;
             modal.classList.add('active');
+            
+            setTimeout(() => {
+                const stars = document.querySelectorAll('#reviewStars i');
+                let selectedRating = 0;
+                
+                stars.forEach(star => {
+                    star.addEventListener('click', function() {
+                        selectedRating = parseInt(this.dataset.value);
+                        stars.forEach((s, i) => {
+                            if (i < selectedRating) {
+                                s.classList.add('fas');
+                                s.classList.remove('far');
+                            } else {
+                                s.classList.remove('fas');
+                                s.classList.add('far');
+                            }
+                        });
+                    });
+                    
+                    star.addEventListener('mouseover', function() {
+                        const val = parseInt(this.dataset.value);
+                        stars.forEach((s, i) => {
+                            if (i < val) {
+                                s.classList.add('fas');
+                                s.classList.remove('far');
+                            } else {
+                                s.classList.remove('fas');
+                                s.classList.add('far');
+                            }
+                        });
+                    });
+                    
+                    star.addEventListener('mouseout', function() {
+                        stars.forEach((s, i) => {
+                            if (i < selectedRating) {
+                                s.classList.add('fas');
+                                s.classList.remove('far');
+                            } else {
+                                s.classList.remove('fas');
+                                s.classList.add('far');
+                            }
+                        });
+                    });
+                });
+                
+                window.getSelectedRating = () => selectedRating;
+            }, 100);
+        }
+    };
+
+    window.submitProductReview = async function(productId) {
+        const rating = window.getSelectedRating ? window.getSelectedRating() : 0;
+        const comment = document.getElementById('reviewComment')?.value?.trim();
+        
+        if (rating === 0) {
+            alert('Пожалуйста, выберите оценку');
+            return;
+        }
+        
+        if (!comment) {
+            alert('Пожалуйста, напишите отзыв');
+            return;
+        }
+        
+        const submitBtn = document.querySelector('#reviewsContent .cyber-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ОТПРАВКА...';
+        submitBtn.disabled = true;
+        
+        try {
+            const response = await fetch(`${API_URL}/reviews`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    rating: rating,
+                    comment: comment
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showNotification('✅ СПАСИБО ЗА ВАШ ОТЗЫВ!', 'success');
+                closeReviewsModal();
+                
+                const apiProducts = await loadProductsFromAPI();
+                if (apiProducts) {
+                    products = apiProducts;
+                    if (typeof updatePagination === 'function') {
+                        updatePagination();
+                    }
+                }
+            } else {
+                showNotification(data.error || '❌ ОШИБКА ОТПРАВКИ. ПОПРОБУЙТЕ ПОЗЖЕ.', 'error');
+            }
+        } catch (error) {
+            console.error('Ошибка отправки отзыва:', error);
+            showNotification('❌ ОШИБКА СОЕДИНЕНИЯ С СЕРВЕРОМ', 'error');
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         }
     };
 
@@ -993,8 +1337,335 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.querySelector('.nav-link[data-page="catalog"]').classList.add('active');
     };
 
+    // ============================================
+    // КРУТОЕ ДЕМО С ИНТЕРАКТИВНЫМ ИНТЕРФЕЙСОМ
+    // ============================================
     window.showDemo = function() {
-        alert('🎬 ДЕМОНСТРАЦИЯ\n\nЗагрузка голографического интерфейса...\n\nДобро пожаловать в 2077 год!');
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.id = 'demoModal';
+        modal.style.cssText = `
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        `;
+        
+        const demos = [
+            {
+                title: 'ГОЛОГРАФИЧЕСКИЙ ИНТЕРФЕЙС',
+                icon: 'fa-cube',
+                color: '#ff2ced',
+                description: 'Управляйте сайтом жестами и голосом. Технология распознавания движений в реальном времени.',
+                features: ['Распознавание жестов', 'Голосовые команды', '3D-интерфейс']
+            },
+            {
+                title: 'НЕЙРОСЕТЕВАЯ ОПТИМИЗАЦИЯ',
+                icon: 'fa-brain',
+                color: '#0abdc6',
+                description: 'Искусственный интеллект анализирует поведение пользователей и оптимизирует контент.',
+                features: ['ИИ-аналитика', 'Персонализация', 'A/B тестирование']
+            },
+            {
+                title: 'КВАНТОВАЯ ЗАЩИТА',
+                icon: 'fa-shield-hal',
+                color: '#23d9a5',
+                description: 'Шифрование на основе квантовых алгоритмов. Ваши данные под надёжной защитой.',
+                features: ['Квантовое шифрование', 'Блокчейн', 'Мультифакторная аутентификация']
+            },
+            {
+                title: 'VR/AR ИНТЕГРАЦИЯ',
+                icon: 'fa-vr-cardboard',
+                color: '#8a2be2',
+                description: 'Полное погружение в виртуальную реальность. Демонстрация товаров в AR.',
+                features: ['VR-туры', 'AR-примерка', '3D-модели']
+            },
+            {
+                title: 'МГНОВЕННАЯ ЗАГРУЗКА',
+                icon: 'fa-bolt',
+                color: '#f5e62b',
+                description: 'Сайты загружаются за 0.1 секунды благодаря квантовому кэшированию.',
+                features: ['Квантовое кэширование', 'Edge-сеть', 'HTTP/3']
+            }
+        ];
+        
+        let currentSlide = 0;
+        
+        modal.innerHTML = `
+            <div style="
+                background: #0a0a1a;
+                border: 2px solid #0abdc6;
+                border-radius: 20px;
+                padding: 2rem;
+                max-width: 800px;
+                width: 90%;
+                max-height: 85vh;
+                overflow-y: auto;
+                position: relative;
+                box-shadow: 0 0 50px rgba(10, 200, 255, 0.3);
+            ">
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 2rem;
+                    padding-bottom: 1rem;
+                    border-bottom: 2px solid #0abdc6;
+                ">
+                    <h2 style="
+                        color: #0abdc6;
+                        font-family: 'Orbitron', sans-serif;
+                        margin: 0;
+                        font-size: clamp(1.2rem, 5vw, 1.8rem);
+                    ">
+                        <i class="fas fa-rocket" style="color: #ff2ced; margin-right: 10px;"></i>
+                        ДЕМОНСТРАЦИЯ ТЕХНОЛОГИЙ 2077
+                    </h2>
+                    <span onclick="this.closest('.modal').remove()" style="
+                        font-size: 2rem;
+                        cursor: pointer;
+                        color: #ff2ced;
+                        line-height: 1;
+                        transition: all 0.3s;
+                    ">&times;</span>
+                </div>
+                
+                <div id="demoSlider" style="
+                    min-height: 350px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                ">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <i id="demoIcon" class="fas ${demos[0].icon}" style="
+                            font-size: 80px;
+                            color: ${demos[0].color};
+                            text-shadow: 0 0 30px ${demos[0].color};
+                            animation: float 3s ease-in-out infinite;
+                        "></i>
+                    </div>
+                    
+                    <h3 id="demoTitle" style="
+                        color: ${demos[0].color};
+                        font-family: 'Orbitron', sans-serif;
+                        text-align: center;
+                        margin-bottom: 20px;
+                        font-size: 1.5rem;
+                    ">${demos[0].title}</h3>
+                    
+                    <p id="demoDescription" style="
+                        color: #ccc;
+                        text-align: center;
+                        line-height: 1.6;
+                        margin-bottom: 30px;
+                    ">${demos[0].description}</p>
+                    
+                    <div id="demoFeatures" style="
+                        display: flex;
+                        justify-content: center;
+                        gap: 20px;
+                        flex-wrap: wrap;
+                        margin-bottom: 30px;
+                    ">
+                        ${demos[0].features.map(f => `
+                            <span style="
+                                padding: 8px 16px;
+                                background: rgba(10, 200, 255, 0.1);
+                                border: 1px solid ${demos[0].color};
+                                border-radius: 20px;
+                                color: ${demos[0].color};
+                                font-size: 0.9rem;
+                            ">
+                                <i class="fas fa-check-circle"></i> ${f}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 20px;
+                ">
+                    <button onclick="window.prevDemoSlide()" style="
+                        padding: 10px 20px;
+                        background: rgba(10, 200, 255, 0.1);
+                        border: 2px solid #0abdc6;
+                        border-radius: 8px;
+                        color: #0abdc6;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    ">
+                        <i class="fas fa-chevron-left"></i> НАЗАД
+                    </button>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        ${demos.map((_, i) => `
+                            <span class="demo-dot ${i === 0 ? 'active' : ''}" style="
+                                width: 12px;
+                                height: 12px;
+                                background: ${i === 0 ? '#ff2ced' : 'rgba(10, 200, 255, 0.3)'};
+                                border-radius: 50%;
+                                cursor: pointer;
+                                transition: all 0.3s;
+                            " onclick="window.goToDemoSlide(${i})"></span>
+                        `).join('')}
+                    </div>
+                    
+                    <button onclick="window.nextDemoSlide()" style="
+                        padding: 10px 20px;
+                        background: rgba(10, 200, 255, 0.1);
+                        border: 2px solid #0abdc6;
+                        border-radius: 8px;
+                        color: #0abdc6;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    ">
+                        ДАЛЕЕ <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div style="
+                    width: 100%;
+                    height: 4px;
+                    background: rgba(10, 200, 255, 0.1);
+                    border-radius: 2px;
+                    margin-top: 30px;
+                    overflow: hidden;
+                ">
+                    <div id="demoProgress" style="
+                        width: ${((currentSlide + 1) / demos.length) * 100}%;
+                        height: 100%;
+                        background: linear-gradient(90deg, #ff2ced, #0abdc6, #23d9a5);
+                        transition: width 0.3s;
+                    "></div>
+                </div>
+                
+                <button onclick="window.scrollToCatalog(); this.closest('.modal').remove();" style="
+                    width: 100%;
+                    margin-top: 20px;
+                    padding: 15px;
+                    background: linear-gradient(90deg, #ff2ced, #0abdc6);
+                    border: none;
+                    border-radius: 10px;
+                    color: white;
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                ">
+                    <i class="fas fa-shopping-cart"></i> ПЕРЕЙТИ В КАТАЛОГ
+                </button>
+            </div>
+            
+            <style>
+                @keyframes float {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-10px); }
+                }
+                
+                .demo-dot:hover {
+                    background: #ff2ced !important;
+                    transform: scale(1.2);
+                }
+                
+                .demo-dot.active {
+                    background: #ff2ced !important;
+                    box-shadow: 0 0 10px #ff2ced;
+                }
+            </style>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        window.demoSlides = demos;
+        window.demoCurrentSlide = 0;
+        
+        window.prevDemoSlide = function() {
+            if (window.demoCurrentSlide > 0) {
+                window.demoCurrentSlide--;
+                updateDemoSlide();
+            }
+        };
+        
+        window.nextDemoSlide = function() {
+            if (window.demoCurrentSlide < demos.length - 1) {
+                window.demoCurrentSlide++;
+                updateDemoSlide();
+            }
+        };
+        
+        window.goToDemoSlide = function(index) {
+            window.demoCurrentSlide = index;
+            updateDemoSlide();
+        };
+        
+        function updateDemoSlide() {
+            const slide = demos[window.demoCurrentSlide];
+            
+            const icon = document.getElementById('demoIcon');
+            icon.className = `fas ${slide.icon}`;
+            icon.style.color = slide.color;
+            icon.style.textShadow = `0 0 30px ${slide.color}`;
+            
+            const title = document.getElementById('demoTitle');
+            title.textContent = slide.title;
+            title.style.color = slide.color;
+            
+            document.getElementById('demoDescription').textContent = slide.description;
+            
+            const features = document.getElementById('demoFeatures');
+            features.innerHTML = slide.features.map(f => `
+                <span style="
+                    padding: 8px 16px;
+                    background: rgba(10, 200, 255, 0.1);
+                    border: 1px solid ${slide.color};
+                    border-radius: 20px;
+                    color: ${slide.color};
+                    font-size: 0.9rem;
+                ">
+                    <i class="fas fa-check-circle"></i> ${f}
+                </span>
+            `).join('');
+            
+            document.querySelectorAll('.demo-dot').forEach((dot, i) => {
+                dot.style.background = i === window.demoCurrentSlide ? slide.color : 'rgba(10, 200, 255, 0.3)';
+            });
+            
+            const progress = ((window.demoCurrentSlide + 1) / demos.length) * 100;
+            document.getElementById('demoProgress').style.width = progress + '%';
+        }
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.remove();
+        });
+        
+        const keyHandler = function(e) {
+            if (e.key === 'ArrowLeft') window.prevDemoSlide();
+            if (e.key === 'ArrowRight') window.nextDemoSlide();
+            if (e.key === 'Escape') modal.remove();
+        };
+        document.addEventListener('keydown', keyHandler);
+        
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mut) => {
+                if (mut.removedNodes.length > 0) {
+                    document.removeEventListener('keydown', keyHandler);
+                    observer.disconnect();
+                }
+            });
+        });
+        observer.observe(modal, { childList: true });
     };
 
     window.toggleMobileMenu = function() {
@@ -1007,7 +1678,480 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
 });
 
-// Закрытие модальных окон по клику вне
+// ============================================
+// ИНТЕРАКТИВНАЯ КАРТА
+// ============================================
+function initCyberMap() {
+    console.log('🗺️ initCyberMap вызвана');
+    
+    const contactPage = document.getElementById('contact-page');
+    if (!contactPage) {
+        console.log('❌ Страница контактов не найдена');
+        return;
+    }
+    
+    let mapInitialized = false;
+    
+    // Проверяем, активна ли уже страница
+    if (contactPage.classList.contains('active')) {
+        console.log('📍 Страница контактов уже активна, создаём карту');
+        setTimeout(() => {
+            createMap();
+            mapInitialized = true;
+        }, 200);
+    }
+    
+    // Наблюдаем за изменением класса
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mut) => {
+            if (mut.target.classList.contains('active') && !mapInitialized) {
+                console.log('📍 Страница контактов стала активной');
+                setTimeout(() => {
+                    createMap();
+                    mapInitialized = true;
+                }, 200);
+            }
+        });
+    });
+    
+    observer.observe(contactPage, { attributes: true, attributeFilter: ['class'] });
+}
+
+function createMap() {
+    console.log('🗺️ createMap вызвана');
+    console.log('📍 window.siteSettings:', window.siteSettings);
+    
+    const mapElement = document.getElementById('cyberMap');
+    if (!mapElement) {
+        console.error('❌ Элемент карты не найден!');
+        return;
+    }
+    if (mapElement._leaflet_id) {
+        console.log('⚠️ Карта уже инициализирована');
+        return;
+    }
+    
+    // Получаем координаты из настроек или используем Москву по умолчанию
+    let lat = 55.7558;
+    let lng = 37.6176;
+    
+    if (window.siteSettings) {
+        if (window.siteSettings.map_latitude) {
+            lat = parseFloat(window.siteSettings.map_latitude);
+        }
+        if (window.siteSettings.map_longitude) {
+            lng = parseFloat(window.siteSettings.map_longitude);
+        }
+    }
+    
+    console.log('📍 Координаты:', lat, lng);
+    
+    const companyPosition = [lat, lng];
+    
+    const map = L.map('cyberMap', {
+        center: companyPosition,
+        zoom: 12,
+        zoomControl: true,
+        attributionControl: true
+    });
+    
+    L.tileLayer('https://core-renderer-tiles.maps.yandex.net/tiles?l=map&theme=dark&x={x}&y={y}&z={z}&lang=ru_RU', {
+        attribution: '© <a href="https://yandex.ru/maps/">Яндекс.Карты</a>',
+        maxZoom: 19
+    }).addTo(map);
+    
+    const markers = L.markerClusterGroup({
+        chunkedLoading: true,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        maxClusterRadius: 50,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            let size = 'small';
+            let color = '#0abdc6';
+            
+            if (count > 50) {
+                size = 'large';
+                color = '#ff2ced';
+            } else if (count > 20) {
+                size = 'medium';
+                color = '#8a2be2';
+            }
+            
+            return L.divIcon({
+                html: `
+                    <div style="
+                        position: relative;
+                        width: ${size === 'large' ? 50 : size === 'medium' ? 40 : 30}px;
+                        height: ${size === 'large' ? 50 : size === 'medium' ? 40 : 30}px;
+                        background: ${color};
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 0 20px ${color};
+                        border: 2px solid #23d9a5;
+                        font-weight: bold;
+                        color: white;
+                        font-family: 'Orbitron', sans-serif;
+                    ">
+                        ${count}
+                    </div>
+                `,
+                className: 'cyber-cluster',
+                iconSize: L.point(size === 'large' ? 50 : size === 'medium' ? 40 : 30, 
+                               size === 'large' ? 50 : size === 'medium' ? 40 : 30)
+            });
+        }
+    });
+    
+    const companyIcon = L.divIcon({
+        html: `
+            <div style="
+                position: relative;
+                width: 50px;
+                height: 50px;
+                background: linear-gradient(135deg, #ff2ced, #0abdc6);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 30px #ff2ced, 0 0 60px #0abdc6;
+                border: 3px solid #23d9a5;
+                animation: pulse-marker 2s infinite;
+            ">
+                <i class="fas fa-building" style="color: white; font-size: 24px;"></i>
+            </div>
+            <div style="
+                position: absolute;
+                bottom: -12px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(135deg, #ff2ced, #0abdc6);
+                clip-path: polygon(50% 100%, 0 0, 100% 0);
+            "></div>
+        `,
+        iconSize: [50, 62],
+        iconAnchor: [25, 62],
+        popupAnchor: [0, -55]
+    });
+    
+    const companyMarker = L.marker(companyPosition, { icon: companyIcon });
+    
+    const address = window.siteSettings?.contact_address || 'КИБЕР-ТАУЭР, УЛ. БУДУЩЕГО, 2077';
+    const phone = window.siteSettings?.contact_phone || '+7 (2077) 123-45-67';
+    
+    companyMarker.bindPopup(`
+        <div style="
+            font-family: 'Rajdhani', sans-serif;
+            color: #0abdc6;
+            text-align: center;
+            min-width: 280px;
+        ">
+            <h3 style="
+                margin: 0 0 10px 0;
+                font-family: 'Orbitron', sans-serif;
+                color: #ff2ced;
+                text-shadow: 0 0 10px #ff2ced;
+            ">
+                <i class="fas fa-star" style="color: #f5e62b;"></i> 
+                КИБЕР-ТАУЭР
+                <i class="fas fa-star" style="color: #f5e62b;"></i>
+            </h3>
+            <p style="margin: 5px 0; color: #ccc;">
+                <i class="fas fa-map-pin" style="color: #ff2ced;"></i> ${address}
+            </p>
+            <p style="margin: 5px 0; color: #23d9a5;">
+                <i class="fas fa-phone" style="color: #23d9a5;"></i> ${phone}
+            </p>
+            <p style="margin: 5px 0; color: #0abdc6;">
+                <i class="fas fa-envelope" style="color: #0abdc6;"></i> INFO@CYBERSITES.2077
+            </p>
+            <hr style="border-color: #0abdc6; margin: 15px 0;">
+            <p style="margin: 5px 0; font-size: 12px; color: #888;">
+                <i class="fas fa-satellite"></i> ${lat}°N, ${lng}°E
+            </p>
+            <p style="margin: 10px 0 0 0;">
+                <a href="https://yandex.ru/maps/?ll=${lng}%2C${lat}&z=15&text=${encodeURIComponent(address)}" 
+                   target="_blank" 
+                   style="
+                       display: inline-block;
+                       padding: 8px 16px;
+                       background: linear-gradient(90deg, #ff2ced, #0abdc6);
+                       color: white;
+                       text-decoration: none;
+                       border-radius: 5px;
+                       font-size: 14px;
+                       transition: all 0.3s;
+                   "
+                   onmouseover="this.style.transform='scale(1.05)'"
+                   onmouseout="this.style.transform='scale(1)'">
+                    <i class="fas fa-external-link-alt"></i> Открыть в Яндекс.Картах
+                </a>
+            </p>
+        </div>
+    `);
+    
+    markers.addLayer(companyMarker);
+    map.addLayer(markers);
+    
+    setTimeout(() => {
+        companyMarker.openPopup();
+    }, 500);
+    
+    // Геолокация
+    const userIcon = L.divIcon({
+        html: `
+            <div style="
+                position: relative;
+                width: 24px;
+                height: 24px;
+                background: #23d9a5;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 20px #23d9a5;
+                border: 3px solid white;
+                animation: user-pulse 2s infinite;
+            ">
+                <div style="
+                    position: absolute;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, rgba(35,217,165,0.3) 0%, transparent 70%);
+                "></div>
+            </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -15]
+    });
+    
+    const locateControl = L.control.locate({
+        position: 'topleft',
+        strings: {
+            title: 'Показать моё местоположение',
+            metersUnit: 'метров',
+            feetUnit: 'футов'
+        },
+        locateOptions: {
+            enableHighAccuracy: true,
+            maxZoom: 16,
+            watch: true
+        },
+        icon: 'fas fa-location-arrow',
+        iconLoading: 'fas fa-spinner fa-spin',
+        drawCircle: true,
+        circleStyle: {
+            color: '#23d9a5',
+            fillColor: '#23d9a5',
+            fillOpacity: 0.15,
+            weight: 2,
+            opacity: 0.5
+        }
+    }).addTo(map);
+    
+    map.on('locationfound', function(e) {
+        const userMarker = L.marker(e.latlng, { icon: userIcon });
+        const distance = map.distance(e.latlng, companyPosition);
+        const distanceKm = (distance / 1000).toFixed(1);
+        
+        userMarker.bindPopup(`
+            <div style="
+                font-family: 'Rajdhani', sans-serif;
+                color: #0abdc6;
+                text-align: center;
+                min-width: 200px;
+            ">
+                <h4 style="margin: 0 0 8px 0; color: #23d9a5;">
+                    <i class="fas fa-user"></i> ВАШЕ МЕСТОПОЛОЖЕНИЕ
+                </h4>
+                <p style="margin: 5px 0; color: #ccc;">
+                    Расстояние до офиса: <strong style="color: #ff2ced;">${distanceKm} км</strong>
+                </p>
+                <p style="margin: 5px 0; font-size: 12px; color: #888;">
+                    Точность: ${Math.round(e.accuracy)} м
+                </p>
+            </div>
+        `);
+        
+        markers.addLayer(userMarker);
+        console.log(`📍 Расстояние до офиса: ${distanceKm} км`);
+    });
+    
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+    
+    const resetViewControl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function(map) {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            container.innerHTML = `
+                <a href="#" title="Вернуться к офису" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 30px;
+                    height: 30px;
+                    background: rgba(10, 10, 26, 0.9);
+                    color: #0abdc6;
+                    text-decoration: none;
+                    font-size: 16px;
+                    border: 2px solid #0abdc6;
+                    border-radius: 4px;
+                ">
+                    <i class="fas fa-building"></i>
+                </a>
+            `;
+            
+            container.onclick = function(e) {
+                e.preventDefault();
+                map.setView(companyPosition, 15);
+                companyMarker.openPopup();
+            };
+            
+            return container;
+        }
+    });
+    
+    map.addControl(new resetViewControl());
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse-marker {
+            0% { transform: scale(1); box-shadow: 0 0 30px #ff2ced, 0 0 60px #0abdc6; }
+            50% { transform: scale(1.15); box-shadow: 0 0 50px #ff2ced, 0 0 90px #0abdc6; }
+            100% { transform: scale(1); box-shadow: 0 0 30px #ff2ced, 0 0 60px #0abdc6; }
+        }
+        
+        @keyframes user-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(35, 217, 165, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(35, 217, 165, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(35, 217, 165, 0); }
+        }
+        
+        .leaflet-popup-content-wrapper {
+            background: rgba(10, 10, 26, 0.95) !important;
+            border: 2px solid #0abdc6 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 0 30px rgba(10, 200, 255, 0.5) !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        .leaflet-popup-tip {
+            background: rgba(10, 10, 26, 0.95) !important;
+            border: 2px solid #0abdc6 !important;
+        }
+        
+        .leaflet-control-zoom {
+            border: 2px solid #0abdc6 !important;
+            box-shadow: 0 0 20px rgba(10, 200, 255, 0.3) !important;
+        }
+        
+        .leaflet-control-zoom a {
+            background: rgba(10, 10, 26, 0.9) !important;
+            color: #0abdc6 !important;
+            border-bottom: 1px solid #0abdc6 !important;
+        }
+        
+        .leaflet-control-zoom a:hover {
+            background: #ff2ced !important;
+            color: white !important;
+        }
+        
+        .leaflet-control-attribution {
+            background: rgba(10, 10, 26, 0.7) !important;
+            color: #888 !important;
+            font-size: 10px !important;
+            padding: 2px 5px !important;
+        }
+        
+        .leaflet-control-attribution a {
+            color: #0abdc6 !important;
+        }
+        
+        .cyber-cluster {
+            animation: cluster-pulse 2s infinite;
+        }
+        
+        @keyframes cluster-pulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+        
+        .leaflet-control-locate {
+            border: 2px solid #0abdc6 !important;
+            box-shadow: 0 0 20px rgba(10, 200, 255, 0.3) !important;
+        }
+        
+        .leaflet-control-locate a {
+            background: rgba(10, 10, 26, 0.9) !important;
+            color: #23d9a5 !important;
+        }
+        
+        .leaflet-control-locate a:hover {
+            background: #23d9a5 !important;
+            color: white !important;
+        }
+        
+        .leaflet-bar a {
+            border-bottom: 1px solid #0abdc6 !important;
+        }
+        
+        .leaflet-bar a:last-child {
+            border-bottom: none !important;
+        }
+        
+        .leaflet-container {
+            font-family: 'Rajdhani', sans-serif !important;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    console.log('✅ Карта создана');
+}
+
+function addCyberGrid(map) {
+    // Пустая функция для совместимости
+}
+
+L.GridLayer = L.Layer.extend({
+    initialize: function(options) {
+        L.setOptions(this, options);
+    },
+    onAdd: function(map) {
+        this._map = map;
+        this._container = L.DomUtil.create('div', 'leaflet-layer');
+        this._update();
+        map.on('moveend', this._update, this);
+        map.getPanes().overlayPane.appendChild(this._container);
+    },
+    onRemove: function(map) {
+        map.off('moveend', this._update, this);
+        L.DomUtil.remove(this._container);
+    },
+    _update: function() {}
+});
+
+L.gridLayer = function(options) {
+    return new L.GridLayer(options);
+};
+
+// ============================================
+// ЗАКРЫТИЕ МОДАЛЬНЫХ ОКОН
+// ============================================
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+        document.getElementById('mobileNav')?.classList.remove('active');
+        document.getElementById('userDropdown')?.classList.remove('active');
+    }
+});
+
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('mobile-nav-link')) {
         document.getElementById('mobileNav')?.classList.remove('active');

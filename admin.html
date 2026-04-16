@@ -285,13 +285,30 @@ background-clip: text;
             </div>
 
             <!-- ОТЗЫВЫ -->
-            <div id="reviews-panel" class="panel">
-                <div class="panel-header">
-                    <h2 class="panel-title">ОТЗЫВЫ КЛИЕНТОВ</h2>
-                    <button class="refresh-btn" onclick="loadReviews()"><i class="fas fa-sync-alt"></i> ОБНОВИТЬ</button>
-                </div>
-                <div class="table-container" id="reviewsList"></div>
-            </div>
+<div id="reviews-panel" class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">ОТЗЫВЫ КЛИЕНТОВ</h2>
+        <button class="refresh-btn" onclick="loadReviews()"><i class="fas fa-sync-alt"></i> ОБНОВИТЬ</button>
+    </div>
+    
+    <!-- Фильтры -->
+    <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+        <select id="reviewFilterProduct" class="cyber-select" style="min-width: 200px;" onchange="filterReviews()">
+            <option value="all">ВСЕ ТОВАРЫ</option>
+        </select>
+        <select id="reviewFilterRating" class="cyber-select" style="min-width: 150px;" onchange="filterReviews()">
+            <option value="all">ВСЕ ОЦЕНКИ</option>
+            <option value="5">5 ★★★★★</option>
+            <option value="4">4 ★★★★</option>
+            <option value="3">3 ★★★</option>
+            <option value="2">2 ★★</option>
+            <option value="1">1 ★</option>
+        </select>
+        <input type="text" id="reviewSearch" class="cyber-input" placeholder="🔍 ПОИСК ПО КОММЕНТАРИЮ..." style="flex: 1; min-width: 200px;" oninput="filterReviews()">
+    </div>
+    
+    <div class="table-container" id="reviewsList"></div>
+</div>
 
             <!-- СООБЩЕНИЯ -->
             <div id="contacts-panel" class="panel">
@@ -355,27 +372,39 @@ background-clip: text;
                     </div>
                     
                     <!-- Контакты -->
-                    <div>
-                        <h3 style="color: #23d9a5; margin-bottom: 20px;"><i class="fas fa-address-card"></i> КОНТАКТЫ</h3>
-                        <div class="form-group">
-                            <label>АДРЕС</label>
-                            <input type="text" id="setting_contact_address" class="form-control">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div class="form-group">
-                                <label>ТЕЛЕФОН</label>
-                                <input type="text" id="setting_contact_phone" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label>EMAIL</label>
-                                <input type="email" id="setting_contact_email" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ВЕБ-САЙТ</label>
-                            <input type="text" id="setting_contact_website" class="form-control">
-                        </div>
-                    </div>
+<div>
+    <h3 style="color: #23d9a5; margin-bottom: 20px;"><i class="fas fa-address-card"></i> КОНТАКТЫ</h3>
+    <div class="form-group">
+        <label>АДРЕС</label>
+        <input type="text" id="setting_contact_address" class="form-control">
+    </div>
+    <!-- 👇 ДОБАВЬТЕ ЭТИ ПОЛЯ 👇 -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div class="form-group">
+            <label>ШИРОТА (latitude)</label>
+            <input type="text" id="setting_map_latitude" class="form-control" placeholder="Например: 35.6895">
+        </div>
+        <div class="form-group">
+            <label>ДОЛГОТА (longitude)</label>
+            <input type="text" id="setting_map_longitude" class="form-control" placeholder="Например: 139.6917">
+        </div>
+    </div>
+    <!-- 👆 КОНЕЦ ДОБАВЛЕНИЯ 👆 -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div class="form-group">
+            <label>ТЕЛЕФОН</label>
+            <input type="text" id="setting_contact_phone" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>EMAIL</label>
+            <input type="email" id="setting_contact_email" class="form-control">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>ВЕБ-САЙТ</label>
+        <input type="text" id="setting_contact_website" class="form-control">
+    </div>
+</div>
                     
                     <!-- Соцсети -->
                     <div>
@@ -759,19 +788,6 @@ background-clip: text;
             } catch(e) {}
         }
 
-        // ========== ОТЗЫВЫ ==========
-        async function loadReviews() {
-            try {
-                const r = await apiRequest('/reviews');
-                let h = '<table class="data-table"><tr><th>ID</th><th>АВТОР</th><th>ТОВАР</th><th>ОЦЕНКА</th><th>КОММЕНТАРИЙ</th><th>ДАТА</th><th>ДЕЙСТВИЯ</th></tr>';
-                r.forEach(x => {
-                    h += `<tr><td>#${x.id}</td><td>${x.username||'Гость'}</td><td>${x.product_title||'—'}</td><td>${'★'.repeat(Math.floor(x.rating))}${'☆'.repeat(5-Math.floor(x.rating))} (${x.rating})</td><td>${x.comment||'—'}</td><td>${new Date(x.created_at).toLocaleString('ru')}</td>
-                        <td><button class="btn-icon btn-delete" onclick="deleteReview(${x.id})"><i class="fas fa-trash"></i></button></td></tr>`;
-                });
-                document.getElementById('reviewsList').innerHTML = h + '</table>';
-            } catch(e) {}
-        }
-
         async function deleteReview(id) {
             if (confirm('Удалить отзыв?')) { try { await apiRequest(`/reviews/${id}`, { method: 'DELETE' }); loadReviews(); } catch(e) {} }
         }
@@ -832,74 +848,293 @@ window.updateContactStatus = updateContactStatus;
 window.deleteContact = deleteContact;
 window.logout = logout;
 
+// ========== УПРАВЛЕНИЕ ОТЗЫВАМИ ==========
+let allReviews = [];
+let allProducts = [];
+
+// Загрузка отзывов
+async function loadReviews() {
+    try {
+        // Загружаем отзывы
+        const reviews = await apiRequest('/reviews');
+        allReviews = reviews;
+        
+        // Загружаем товары для фильтра
+        const products = await apiRequest('/products');
+        allProducts = products;
+        
+        // Заполняем фильтр по товарам
+        const productFilter = document.getElementById('reviewFilterProduct');
+        if (productFilter) {
+            productFilter.innerHTML = '<option value="all">ВСЕ ТОВАРЫ</option>' + 
+                products.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+        }
+        
+        renderReviewsTable(reviews);
+    } catch (e) {
+        console.error('Ошибка загрузки отзывов:', e);
+    }
+}
+
+// Фильтрация отзывов
+function filterReviews() {
+    const productId = document.getElementById('reviewFilterProduct')?.value || 'all';
+    const rating = document.getElementById('reviewFilterRating')?.value || 'all';
+    const searchTerm = document.getElementById('reviewSearch')?.value.toLowerCase() || '';
+    
+    let filtered = allReviews;
+    
+    if (productId !== 'all') {
+        filtered = filtered.filter(r => r.product_id == productId);
+    }
+    
+    if (rating !== 'all') {
+        filtered = filtered.filter(r => Math.floor(r.rating) == rating);
+    }
+    
+    if (searchTerm) {
+        filtered = filtered.filter(r => 
+            (r.comment && r.comment.toLowerCase().includes(searchTerm)) ||
+            (r.username && r.username.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    renderReviewsTable(filtered);
+}
+
+// Отображение таблицы отзывов
+function renderReviewsTable(reviews) {
+    const container = document.getElementById('reviewsList');
+    
+    if (!reviews || reviews.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #888;">📝 НЕТ ОТЗЫВОВ</p>';
+        return;
+    }
+    
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ТОВАР</th>
+                    <th>АВТОР</th>
+                    <th>ОЦЕНКА</th>
+                    <th>КОММЕНТАРИЙ</th>
+                    <th>ДАТА</th>
+                    <th>ДЕЙСТВИЯ</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    reviews.forEach(r => {
+        const stars = '★'.repeat(Math.floor(r.rating)) + '☆'.repeat(5 - Math.floor(r.rating));
+        const product = allProducts.find(p => p.id === r.product_id);
+        
+        html += `
+            <tr>
+                <td>#${r.id}</td>
+                <td><strong>${product?.title || 'Товар #' + r.product_id}</strong></td>
+                <td>${r.username || 'Гость'}</td>
+                <td style="color: #f5e62b; font-size: 1.2rem;">${stars} (${r.rating})</td>
+                <td style="max-width: 300px;">${r.comment || '—'}</td>
+                <td>${new Date(r.created_at).toLocaleString('ru')}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-icon btn-view" onclick="viewReviewDetails(${r.id})" title="Просмотр">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-icon btn-delete" onclick="deleteReview(${r.id})" title="Удалить">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Просмотр деталей отзыва
+function viewReviewDetails(id) {
+    const review = allReviews.find(r => r.id === id);
+    if (!review) return;
+    
+    const product = allProducts.find(p => p.id === review.product_id);
+    const stars = '★'.repeat(Math.floor(review.rating)) + '☆'.repeat(5 - Math.floor(review.rating));
+    
+    alert(`
+        📋 ОТЗЫВ #${review.id}
+        
+        Товар: ${product?.title || 'Товар #' + review.product_id}
+        Автор: ${review.username || 'Гость'}
+        Оценка: ${stars} (${review.rating})
+        Дата: ${new Date(review.created_at).toLocaleString('ru')}
+        
+        Комментарий:
+        ${review.comment || 'Нет комментария'}
+    `);
+}
+
+// Удаление отзыва
+async function deleteReview(id) {
+    if (!confirm('Удалить этот отзыв навсегда?')) return;
+    
+    try {
+        await apiRequest(`/reviews/${id}`, { method: 'DELETE' });
+        showNotification('✅ Отзыв удален', 'success');
+        loadReviews();
+    } catch (e) {
+        showNotification('❌ Ошибка удаления', 'error');
+    }
+}
+
+// Обновите глобальные функции
+window.loadReviews = loadReviews;
+window.filterReviews = filterReviews;
+window.viewReviewDetails = viewReviewDetails;
+window.deleteReview = deleteReview;
         // ========== НАСТРОЙКИ ==========
-        async function loadSettings() {
-            try {
-                const settings = await apiRequest('/admin/settings');
-                
-                settings.forEach(s => {
-                    const element = document.getElementById(`setting_${s.setting_key}`);
-                    if (element) {
-                        element.value = s.setting_value || '';
-                    }
-                });
-                
-                showNotification('✅ Настройки загружены', 'success');
-            } catch (e) {
-                showNotification('❌ Ошибка загрузки настроек', 'error');
+async function loadSettings() {
+    try {
+        const response = await fetch(`${API_URL}/admin/settings`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) throw new Error('Ошибка загрузки');
+        
+        const settings = await response.json();
+        console.log('📥 Загружены настройки:', settings);
+        
+        // Создаем объект для быстрого доступа
+        const settingsMap = {};
+        settings.forEach(s => {
+            settingsMap[s.setting_key] = s.setting_value;
+        });
+        
+        // Сохраняем глобально
+        window.siteSettings = settingsMap;
+        
+        // Заполняем поля
+        const keys = [
+            'hero_title', 'hero_subtitle', 'about_text',
+            'contact_address', 'contact_phone', 'contact_email', 'contact_website',
+            'map_latitude', 'map_longitude',
+            'social_telegram', 'social_vk', 'social_whatsapp',
+            'stats_products', 'stats_clients', 'stats_satisfaction'
+        ];
+        
+        keys.forEach(key => {
+            const element = document.getElementById(`setting_${key}`);
+            if (element) {
+                element.value = settingsMap[key] || '';
             }
+        });
+        
+        // Установка значений по умолчанию, если пусто
+        if (!document.getElementById('setting_map_latitude').value) {
+            document.getElementById('setting_map_latitude').value = '55.7558';
         }
-
-        async function saveSettings() {
-            const settings = {};
-            
-            const keys = [
-                'hero_title', 'hero_subtitle', 'about_text',
-                'contact_address', 'contact_phone', 'contact_email', 'contact_website',
-                'social_telegram', 'social_vk', 'social_whatsapp', 'social_odnoklassniki', 'social_pinterest',
-                'stats_products', 'stats_clients', 'stats_satisfaction'
-            ];
-            
-            keys.forEach(key => {
-                const element = document.getElementById(`setting_${key}`);
-                if (element) {
-                    settings[key] = element.value;
-                }
-            });
-            
-            try {
-                await apiRequest('/settings', {
-                    method: 'PUT',
-                    body: JSON.stringify(settings)
-                });
-                
-                showNotification('✅ Настройки сохранены!', 'success');
-            } catch (e) {
-                showNotification('❌ Ошибка сохранения', 'error');
-            }
+        if (!document.getElementById('setting_map_longitude').value) {
+            document.getElementById('setting_map_longitude').value = '37.6176';
         }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                bottom: 30px;
-                right: 30px;
-                background: rgba(10, 10, 26, 0.95);
-                border: 2px solid ${type === 'success' ? '#23d9a5' : '#ff3838'};
-                border-radius: 10px;
-                padding: 1rem 2rem;
-                color: white;
-                z-index: 9999;
-                animation: slideIn 0.3s ease;
-            `;
-            notification.innerHTML = message;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
+        if (!document.getElementById('setting_stats_products').value) {
+            document.getElementById('setting_stats_products').value = '30';
         }
+        if (!document.getElementById('setting_stats_clients').value) {
+            document.getElementById('setting_stats_clients').value = '120';
+        }
+        if (!document.getElementById('setting_stats_satisfaction').value) {
+            document.getElementById('setting_stats_satisfaction').value = '99';
+        }
+        
+        showNotification('✅ Настройки загружены', 'success');
+    } catch (e) {
+        console.error('❌ Ошибка загрузки настроек:', e);
+        showNotification('❌ Ошибка загрузки настроек', 'error');
+    }
+}
 
-        window.loadSettings = loadSettings;
-        window.saveSettings = saveSettings;
+async function saveSettings() {
+    const settings = {};
+    
+    const keys = [
+        'hero_title', 'hero_subtitle', 'about_text',
+        'contact_address', 'contact_phone', 'contact_email', 'contact_website',
+        'map_latitude', 'map_longitude',
+        'social_telegram', 'social_vk', 'social_whatsapp', 'social_odnoklassniki', 'social_pinterest',
+        'stats_products', 'stats_clients', 'stats_satisfaction'
+    ];
+    
+    // Собираем значения из всех полей
+    keys.forEach(key => {
+        const element = document.getElementById(`setting_${key}`);
+        if (element) {
+            settings[key] = element.value;
+        }
+    });
+    
+    console.log('📤 Отправка настроек:', settings);
+    
+    // Показываем индикатор загрузки
+    const saveBtn = document.querySelector('#settings-panel .btn-primary');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> СОХРАНЕНИЕ...';
+    saveBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(settings)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Обновляем глобальные настройки
+            window.siteSettings = settings;
+            showNotification('✅ Настройки успешно сохранены!', 'success');
+            console.log('✅ Настройки сохранены');
+        } else {
+            showNotification('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'), 'error');
+            console.error('❌ Ошибка сохранения:', data);
+        }
+    } catch (e) {
+        console.error('❌ Ошибка соединения:', e);
+        showNotification('❌ Ошибка соединения с сервером', 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: rgba(10, 10, 26, 0.95);
+        border: 2px solid ${type === 'success' ? '#23d9a5' : '#ff3838'};
+        border-radius: 10px;
+        padding: 1rem 2rem;
+        color: white;
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.innerHTML = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+window.loadSettings = loadSettings;
+window.saveSettings = saveSettings;
 
     </script>
 </body>
